@@ -1,0 +1,29 @@
+{
+  "name": "datacapita",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AI-assisted personal finance manager",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.117.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^5.1.0",
+    "helmet": "^8.1.0",
+    "morgan": "^1.10.0",
+    "openai": "^5.20.0",
+    "pdfjs-dist": "^6.4.299",
+    "razorpay": "^2.9.6"
+  },
+  "main": "server.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs"
+}

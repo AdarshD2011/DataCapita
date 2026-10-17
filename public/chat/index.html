@@ -1,0 +1,695 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chat DataCapita Finance Manager</title>
+<meta name="description" content="Understand bank statements, spending, balances and financial documents in plain language.">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+:root{--bg:#0b1020;--panel:#121a2d;--panel2:#172139;--line:#26334d;--text:#eef3ff;--muted:#94a3bd;--blue:#6b8cff;--cyan:#48d9ce;--green:#4dd4a3;--red:#ff7588;--gold:#f8c96b}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(1000px 500px at 20% -10%,#1d2d56 0%,transparent 65%),var(--bg);color:var(--text);font:14px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif}button,input,select{font:inherit}button{cursor:pointer}.app{display:grid;grid-template-columns:250px minmax(0,1fr);min-height:100vh}.sidebar{border-right:1px solid var(--line);padding:24px 16px;background:#0c1324;display:flex;flex-direction:column;gap:25px}.brand{display:flex;align-items:center;gap:11px;padding:0 8px}.logo{width:40px;height:40px;border-radius:13px;background:linear-gradient(135deg,var(--blue),var(--cyan));display:grid;place-items:center;color:#08111f;font-weight:900;font-size:19px;box-shadow:0 8px 28px #4c7dff30}.brand strong{display:block;font-size:15px;letter-spacing:.1px}.brand small{color:var(--muted);font-size:11px}.nav-label{color:#64738f;font-size:10px;font-weight:800;letter-spacing:1.5px;padding:0 12px;margin-bottom:7px}.nav{display:grid;gap:5px}.nav button{border:0;color:#aebbd3;background:transparent;text-align:left;border-radius:10px;padding:11px 12px;display:flex;gap:12px;align-items:center}.nav button.active,.nav button:hover{background:#1b2843;color:#fff}.nav button.active{box-shadow:inset 3px 0 var(--cyan)}.nav .ico{width:19px;text-align:center;font-size:16px}.privacy{margin-top:auto;background:#101d2e;border:1px solid #263b50;padding:14px;border-radius:13px;color:#a6bad0;font-size:12px}.privacy b{display:block;color:#d9f8ee;margin-bottom:5px}.main{min-width:0;padding:28px clamp(16px,3vw,38px) 40px}.topbar{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:28px}.eyebrow{color:var(--cyan);font-size:11px;font-weight:800;letter-spacing:1.8px;text-transform:uppercase}.topbar h1{font-size:clamp(23px,3vw,31px);line-height:1.2;margin:5px 0}.sub{color:var(--muted);margin:0}.top-actions{display:flex;gap:8px;align-items:center}.pill{border:1px solid var(--line);border-radius:999px;padding:7px 11px;color:#c7d5ed;font-size:12px;background:#10182a}.btn{border:1px solid var(--line);background:#1b2842;color:var(--text);padding:10px 14px;border-radius:10px;font-weight:700}.btn.primary{background:linear-gradient(120deg,#7792ff,#4fcfc9);border:0;color:#071321}.btn:hover{filter:brightness(1.12)}.grid{display:grid;gap:16px}.stats{grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:18px}.card{background:linear-gradient(160deg,#141e33,#11192b);border:1px solid var(--line);border-radius:16px;padding:18px;min-width:0;box-shadow:0 8px 25px #00000012}.stat-label{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:7px}.stat-value{font-size:clamp(21px,2.2vw,29px);font-weight:800;letter-spacing:-.7px;margin:8px 0 4px;overflow-wrap:anywhere}.stat-foot{font-size:11px;color:#8090ad}.stat-icon{float:right;width:34px;height:34px;border-radius:10px;background:#243554;display:grid;place-items:center;font-size:16px}.two{grid-template-columns:minmax(0,1.5fr) minmax(270px,1fr);margin-bottom:16px}.card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:15px}.card h2{font-size:15px;margin:0 0 3px}.card-head p{font-size:12px;color:var(--muted);margin:0}.chart-wrap{height:235px;position:relative}.dropzone{border:1px dashed #52658a;background:#111c31;border-radius:13px;padding:19px;text-align:center;transition:.2s}.dropzone.drag{border-color:var(--cyan);background:#15303b}.dropzone .cloud{font-size:27px;margin-bottom:4px}.dropzone strong{display:block;font-size:13px}.dropzone p{color:var(--muted);font-size:12px;margin:4px 0 12px}.file-input{display:none}.file-list{display:grid;gap:7px;margin-top:12px}.file-row{display:flex;align-items:center;gap:9px;background:#111a2b;border:1px solid var(--line);padding:9px;border-radius:9px;font-size:12px}.file-row .fname{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}.file-row .fmeta{color:var(--muted);white-space:nowrap}.remove{border:0;background:transparent;color:#9bacbf;font-size:16px}.status{font-size:12px;color:var(--muted);margin-top:10px;min-height:18px}.tag{font-size:10px;font-weight:800;padding:4px 7px;border-radius:6px;background:#19372f;color:var(--green)}.tag.warn{background:#3a2e1a;color:var(--gold)}.tag.bad{background:#3c202e;color:var(--red)}.transactions{margin-top:16px}.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}.toolbar input,.toolbar select,.chat-input{min-width:0;background:#0e1627;border:1px solid var(--line);border-radius:9px;padding:10px 11px;color:var(--text);outline:none}.toolbar input:focus,.toolbar select:focus,.chat-input:focus{border-color:var(--blue)}.toolbar input{flex:1;min-width:170px}.table-wrap{overflow:auto;max-height:420px;border:1px solid var(--line);border-radius:10px}table{width:100%;border-collapse:collapse;white-space:nowrap}th,td{text-align:left;padding:11px 13px;border-bottom:1px solid #222e45;font-size:12px}th{position:sticky;top:0;background:#172139;color:#9eb0cb;font-size:10px;text-transform:uppercase;letter-spacing:.7px;z-index:1}td{color:#dbe5f7}tbody tr:hover{background:#18243b}.amount{font-weight:800;text-align:right}.credit{color:var(--green)}.debit{color:#ff9aa8}.empty{text-align:center;padding:28px;color:var(--muted)}.chat-layout{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(280px,.85fr);gap:16px}.chat-box{height:360px;overflow:auto;display:flex;flex-direction:column;gap:10px;padding:4px 2px 12px}.bubble{max-width:92%;padding:11px 13px;border-radius:12px;background:#1a2841;color:#dce7f9;font-size:13px;white-space:pre-wrap}.bubble.user{align-self:flex-end;background:#263c68}.bubble.assistant{align-self:flex-start}.chat-row{display:flex;gap:8px}.chat-input{flex:1}.quick-prompts{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}.quick{border:1px solid var(--line);background:#111a2b;color:#b9c9e2;border-radius:999px;padding:7px 10px;font-size:11px}.section{display:none}.section.active{display:block}.note{font-size:11px;color:var(--muted);margin-top:12px}.insight-list{display:grid;gap:9px}.insight{display:flex;gap:10px;padding:10px;background:#111a2b;border-radius:10px;font-size:12px;color:#cbd7e9}.dot{width:7px;height:7px;border-radius:50%;background:var(--cyan);margin-top:6px;flex-shrink:0}.settings-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--line)}.settings-row:last-child{border:0}.settings-row p{margin:3px 0 0;color:var(--muted);font-size:12px}.footer{margin-top:18px;color:#657591;font-size:11px;text-align:center}.mobile-menu{display:none}
+@media(max-width:1000px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.two,.chat-layout{grid-template-columns:1fr}.sidebar{width:210px}.app{grid-template-columns:210px minmax(0,1fr)}}
+@media(max-width:680px){.app{display:block}.sidebar{display:none}.main{padding:19px 13px 30px}.topbar{align-items:flex-start}.top-actions{flex-direction:column;align-items:flex-end}.pill{display:none}.stats{gap:9px}.card{padding:14px}.stat-value{font-size:22px}.chart-wrap{height:210px}.mobile-menu{display:inline-flex}.two{grid-template-columns:1fr}.toolbar select{flex:1}.topbar h1{font-size:23px}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+  <div class="brand"><div class="logo">DC</div><div><strong>Chat DataCapita</strong><small>Finance Manager · AI workspace</small></div></div>
+  <div><div class="nav-label">WORKSPACE</div><nav class="nav">
+    <button class="active" data-section="overview"><span class="ico">▦</span>Overview</button>
+    <button data-section="documents"><span class="ico">▤</span>Bank documents</button>
+    <button data-section="transactions"><span class="ico">⇄</span>Transactions</button>
+    <button data-section="assistant"><span class="ico">✧</span>AI finance chat</button>
+    <button data-section="insights"><span class="ico">◈</span>Insights & checks</button>
+    <button data-section="settings"><span class="ico">⚙</span>Settings & privacy</button>
+  </nav></div>
+  <div class="privacy"><b>◉ Privacy-first workspace</b>Files are parsed in your browser. This demo does not connect to any bank or verify authenticity. AI API use sends only the selected summary/sample to your configured server.</div>
+</aside>
+<main class="main">
+<header class="topbar"><div><div class="eyebrow">PERSONAL FINANCE INTELLIGENCE</div><h1 id="pageTitle">Your money, made clearer.</h1><p class="sub" id="pageSub">Upload statements and turn raw bank data into understandable insights.</p></div><div class="top-actions"><span class="pill">● Local document mode</span><button class="btn primary" id="quickUpload">＋ Add documents</button></div></header>
+
+<section id="overview" class="section active">
+  <div class="grid stats">
+    <div class="card"><div class="stat-icon">₹</div><div class="stat-label">Net cash flow</div><div class="stat-value" id="netFlow">₹0.00</div><div class="stat-foot">Credits minus debits in loaded data</div></div>
+    <div class="card"><div class="stat-icon">↗</div><div class="stat-label">Total money in</div><div class="stat-value" id="totalIn">₹0.00</div><div class="stat-foot" id="creditCount">0 credit transactions</div></div>
+    <div class="card"><div class="stat-icon">↘</div><div class="stat-label">Total money out</div><div class="stat-value" id="totalOut">₹0.00</div><div class="stat-foot" id="debitCount">0 debit transactions</div></div>
+    <div class="card"><div class="stat-icon">≋</div><div class="stat-label">Transactions found</div><div class="stat-value" id="txCount">0</div><div class="stat-foot" id="dateRange">Upload a statement to begin</div></div>
+  </div>
+  <div class="grid two">
+    <div class="card"><div class="card-head"><div><h2>Cash flow over time</h2><p>Monthly credits and debits from imported rows</p></div><span class="tag" id="chartTag">WAITING FOR DATA</span></div><div class="chart-wrap"><canvas id="cashChart"></canvas></div></div>
+    <div class="card"><div class="card-head"><div><h2>Spending categories</h2><p>Estimated from transaction descriptions</p></div></div><div class="chart-wrap"><canvas id="categoryChart"></canvas></div></div>
+  </div>
+  <div class="grid two">
+    <div class="card"><div class="card-head"><div><h2>Import bank documents</h2><p>Multiple files, mixed formats, one workspace</p></div><span class="tag">LOCAL PARSING</span></div><div class="dropzone" id="dropzone"><div class="cloud">⇧</div><strong>Drop bank files here</strong><p>CSV, XLSX, XLS, PDF or TXT. Scanned PDFs may need OCR first.</p><button class="btn primary" id="browseBtn">Choose files</button><input id="fileInput" class="file-input" type="file" multiple accept=".csv,.xlsx,.xls,.pdf,.txt,.tsv"></div><div id="fileList" class="file-list"></div><div id="uploadStatus" class="status">No files imported yet.</div></div>
+    <div class="card"><div class="card-head"><div><h2>First-look insights</h2><p>Quick checks on the data currently loaded</p></div></div><div class="insight-list" id="insightList"><div class="insight"><span class="dot"></span><span>Upload a statement to generate a summary, spending signals and data-quality checks.</span></div></div><p class="note">Insights are based only on rows the parser could recognize; they are not fraud detection or bank verification.</p></div>
+  </div>
+  <div class="card transactions"><div class="card-head"><div><h2>Recent transactions</h2><p>Latest rows detected across imported files</p></div><button class="btn" onclick="go('transactions')">View all →</button></div><div id="recentTable" class="table-wrap"><div class="empty">Your transactions will appear here after import.</div></div></div>
+</section>
+
+<section id="documents" class="section">
+  <div class="grid two">
+    <div class="card"><div class="card-head"><div><h2>Document intake</h2><p>Import multiple bank-related files together</p></div><span class="tag">MULTI-FILE</span></div><div class="dropzone" id="dropzone2"><div class="cloud">⇧</div><strong>Choose or drop files</strong><p>CSV · Excel · PDF text · TXT</p><button class="btn primary" id="browseBtn2">Choose files</button></div><div id="fileList2" class="file-list"></div><div class="status" id="uploadStatus2">Files stay in this browser session unless you export them.</div></div>
+    <div class="card"><h2>Supported document types</h2><div class="insight-list" style="margin-top:14px"><div class="insight"><span class="dot"></span><span><b>CSV / TSV</b><br>Best for statement exports and transaction data.</span></div><div class="insight"><span class="dot"></span><span><b>Excel (.xlsx / .xls)</b><br>Reads the first worksheet and detects likely date, description and amount columns.</span></div><div class="insight"><span class="dot"></span><span><b>Text-based PDF</b><br>Extracts selectable text; layouts differ by bank, so always review rows.</span></div><div class="insight"><span class="dot"></span><span><b>TXT</b><br>Best-effort line parsing for exported text.</span></div></div><p class="note">Scanned/image-only PDFs need OCR; this version will tell you if text is not extractable.</p></div>
+  </div>
+  <div class="card" style="margin-top:16px"><div class="card-head"><div><h2>Imported files</h2><p>Review import status and remove a file's transactions</p></div><button class="btn" id="clearFiles">Clear all data</button></div><div id="fileTable" class="table-wrap"><div class="empty">No files yet.</div></div></div>
+</section>
+
+<section id="transactions" class="section">
+ <div class="card"><div class="card-head"><div><h2>Transaction explorer</h2><p>Search, filter, review and export parsed rows</p></div><button class="btn primary" id="exportCsv">↓ Export CSV</button></div>
+ <div class="toolbar"><input id="searchTx" placeholder="Search description, date, category…"><select id="typeFilter"><option value="all">All transactions</option><option value="credit">Money in</option><option value="debit">Money out</option></select><select id="categoryFilter"><option value="all">All categories</option></select><select id="sortFilter"><option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="high">Largest amount</option></select></div><div id="txTable" class="table-wrap"><div class="empty">Import a statement to see transactions.</div></div><div class="note" id="tableFoot">0 rows</div></div>
+</section>
+
+<section id="assistant" class="section">
+ <div class="chat-layout"><div class="card"><div class="card-head"><div><h2>Chat DataCapita Finance Manager</h2><p>Ask questions about the imported data in plain English</p></div><span class="tag">FINANCE ASSISTANT</span></div><div class="chat-box" id="chatBox"><div class="bubble assistant">Hi! I'm Chat DataCapita Finance Manager. Upload a bank statement first, then ask me to explain spending, compare months, find recurring payments, or summarize a document. I can only analyze the rows successfully imported here.</div></div><div class="quick-prompts"><button class="quick" data-prompt="Summarize my statement in simple language.">Summarize statement</button><button class="quick" data-prompt="What are my biggest spending categories?">Biggest spending</button><button class="quick" data-prompt="Find possible recurring payments or subscriptions.">Recurring payments</button><button class="quick" data-prompt="Check the imported data for missing fields or unusual transactions.">Data quality check</button></div><div class="chat-row"><input class="chat-input" id="chatInput" placeholder="Ask about your imported bank data…"><button class="btn primary" id="sendChat">Send</button></div><p class="note">Local assistant works without an API key. Optional AI answers require configuring your own server key. Never upload PINs, passwords, OTPs or full card details.</p></div>
+ <div class="card"><div class="card-head"><div><h2>Context available to assistant</h2><p>What the current chat can see</p></div></div><div class="insight-list" id="contextList"><div class="insight"><span class="dot"></span><span>No imported transactions yet.</span></div></div><p class="note">This app does not log into banks, connect to banking rails, or certify a document as genuine.</p></div></div>
+</section>
+
+<section id="insights" class="section">
+ <div class="grid two"><div class="card"><div class="card-head"><div><h2>Spending intelligence</h2><p>Transparent calculations from recognized transactions</p></div></div><div id="deepInsights" class="insight-list"><div class="insight"><span class="dot"></span><span>Import data to calculate insights.</span></div></div></div><div class="card"><div class="card-head"><div><h2>Data integrity checks</h2><p>Import quality checks—not proof of authenticity</p></div></div><div id="qualityInsights" class="insight-list"><div class="insight"><span class="dot"></span><span>No imported data.</span></div></div></div></div>
+ <p class="note">A statement can be edited or fabricated. Authenticity must be checked with the issuing bank through an official channel.</p>
+</section>
+
+<section id="settings" class="section">
+ <div class="card"><div class="card-head"><div><h2>Settings & privacy</h2><p>Understand where data goes</p></div></div>
+ <div class="settings-row"><div><b>Browser-only document parsing</b><p>PDF, CSV and Excel parsing runs on this device.</p></div><span class="tag">ON</span></div>
+ <div class="settings-row"><div><b>Optional AI server</b><p>Only enabled when an API key is configured in your server's .env file.</p></div><span class="tag warn" id="aiState">CHECKING</span></div>
+ <div class="settings-row"><div><b>Bank connection</b><p>No bank login or live bank feed is connected in this build.</p></div><span class="tag warn">NOT CONNECTED</span></div>
+ <div class="settings-row"><div><b>Clear current session</b><p>Removes imported rows and file names from the page memory.</p></div><button class="btn" id="clearAll">Clear data</button></div>
+ <div class="settings-row"><div><b>Export analysis</b><p>Download your recognized transactions as CSV.</p></div><button class="btn" id="exportCsv2">Export CSV</button></div>
+ </div>
+</section>
+<div class="footer">Chat DataCapita Finance Manager · Document analysis, not bank authentication or professional financial advice.</div>
+</main></div>
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const state = {transactions:[], files:[], nextId:1, cashChart:null, catChart:null};
+const money = n => new Intl.NumberFormat("en-IN",{style:"currency",currency:"INR",maximumFractionDigits:2}).format(Number(n)||0);
+const esc = s => String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function go(id){$$(".section").forEach(x=>x.classList.toggle("active",x.id===id));$$(".nav button").forEach(x=>x.classList.toggle("active",x.dataset.section===id));const labels={overview:["Your money, made clearer.","Upload statements and turn raw bank data into understandable insights."],documents:["Bank document workspace","Import and review multiple bank-related files."],transactions:["Transaction explorer","Search, filter and export recognized transactions."],assistant:["Ask your finance assistant","Get clear explanations based on your imported rows."],insights:["Insights & integrity checks","See patterns, anomalies and parser-quality signals."],settings:["Settings & privacy","Review how this workspace handles your data."]};$("#pageTitle").textContent=labels[id][0];$("#pageSub").textContent=labels[id][1];}
+$$(".nav button").forEach(b=>b.addEventListener("click",()=>go(b.dataset.section)));
+$("#quickUpload").onclick=()=>{go("documents");$("#fileInput").click()};$("#browseBtn").onclick=()=>$("#fileInput").click();$("#browseBtn2").onclick=()=>$("#fileInput").click();
+function setupDrop(id){const el=$(id);if(!el)return;el.addEventListener("dragover",e=>{e.preventDefault();el.classList.add("drag")});el.addEventListener("dragleave",()=>el.classList.remove("drag"));el.addEventListener("drop",e=>{e.preventDefault();el.classList.remove("drag");handleFiles([...e.dataTransfer.files])});el.addEventListener("click",e=>{if(e.target===el||e.target.classList.contains("cloud")||e.target.tagName==="STRONG"||e.target.tagName==="P")$("#fileInput").click()})}
+setupDrop("#dropzone");setupDrop("#dropzone2");
+$("#fileInput").addEventListener("change",async e=>{await handleFiles([...e.target.files]);e.target.value=""});
+function normalizeHeader(s){return String(s||"").toLowerCase().replace(/[^a-z0-9]/g,"")}
+function detectColumns(headers){const h=headers.map(normalizeHeader);const find=keys=>h.findIndex(x=>keys.some(k=>x.includes(k)));return {date:find(["date","valuedate","transactiondate","postingdate"]),desc:find(["description","narration","details","particular","remarks","transactiondetails","merchant"]),debit:find(["debit","withdrawal","withdraw","paidout","dramount"]),credit:find(["credit","deposit","paidin","cramount"]),amount:find(["amount","transactionamount","amt"]),type:find(["type","drcr","transactiontype"]),balance:find(["balance","closingbalance","runningbalance"])}}
+function parseAmount(v){if(typeof v==="number")return v;let s=String(v??"").trim();if(!s)return NaN;let neg=/^\(.*\)$/.test(s)||/\bDR\b/i.test(s);s=s.replace(/[₹,$,\s]/g,"").replace(/[()]/g,"").replace(/\b(CR|DR)\b/ig,"");let n=Number(s);return Number.isFinite(n)?(neg?-Math.abs(n):n):NaN}
+
+function parseDate(v) {
+  if (v instanceof Date && !isNaN(v)) {
+    return `${v.getFullYear()}-${String(v.getMonth() + 1).padStart(2, "0")}-${String(v.getDate()).padStart(2, "0")}`;
+  }
+
+  if (typeof v === "number" && v > 20000 && v < 80000) {
+    const d = XLSX.SSF.parse_date_code(v);
+    if (d) {
+      return `${d.y}-${String(d.m).padStart(2, "0")}-${String(d.d).padStart(2, "0")}`;
+    }
+  }
+
+  const s = String(v ?? "").trim();
+  if (!s) return "";
+
+  let m = s.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$/);
+  if (m) {
+    return `${m[1]}-${String(m[2]).padStart(2, "0")}-${String(m[3]).padStart(2, "0")}`;
+  }
+
+  m = s.match(/^(\d{1,2})[-/.]([A-Za-z]{3,9})[-/.](\d{2,4})$/);
+  if (m) {
+    const months = {jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12};
+    const month = months[m[2].slice(0, 3).toLowerCase()];
+    let year = Number(m[3]);
+    if (year < 100) year += year < 50 ? 2000 : 1900;
+    const day = Number(m[1]);
+
+    if (month) {
+      const d = new Date(Date.UTC(year, month - 1, day));
+      if (d.getUTCFullYear() === year && d.getUTCMonth() === month - 1 && d.getUTCDate() === day) {
+        return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+      }
+    }
+  }
+
+  m = s.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{2,4})$/);
+  if (m) {
+    const a = Number(m[1]);
+    const b = Number(m[2]);
+    let year = Number(m[3]);
+    if (year < 100) year += year < 50 ? 2000 : 1900;
+
+    const day = a > 12 ? a : b > 12 ? b : a;
+    const month = a > 12 ? b : b > 12 ? a : b;
+    const d = new Date(Date.UTC(year, month - 1, day));
+
+    if (d.getUTCFullYear() === year && d.getUTCMonth() === month - 1 && d.getUTCDate() === day) {
+      return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    }
+  }
+
+  return "";
+}
+
+function categorize(desc){const s=String(desc||"").toLowerCase();if(/salary|payroll|stipend/.test(s))return"Salary";if(/rent|landlord/.test(s))return"Rent";if(/grocery|supermarket|mart|vegetable|kirana|blinkit|zepto|bigbasket/.test(s))return"Groceries";if(/swiggy|zomato|restaurant|cafe|food|pizza/.test(s))return"Food";if(/uber|ola|rapido|petrol|fuel|metro|irctc|rail|bus|flight/.test(s))return"Transport";if(/electric|water bill|recharge|broadband|jio|airtel|vi\b/.test(s))return"Utilities";if(/amazon|flipkart|myntra|shopping|retail/.test(s))return"Shopping";if(/atm|cash withdrawal/.test(s))return"Cash";if(/interest|dividend/.test(s))return"Interest";if(/emi|loan/.test(s))return"Loan/EMI";if(/fee|charge|penalty/.test(s))return"Bank charges";if(/transfer|neft|imps|upi|rtgs/.test(s))return"Transfer";return"Other"}
+
+function rowsToTransactions(rows, filename, sheetName = "") {
+  if (!rows.length) return [];
+
+  // Find the real header row, even when bank details come first.
+  let headerIndex = -1;
+  let cols = null;
+
+  for (let i = 0; i < Math.min(rows.length, 30); i++) {
+    const headers = rows[i].map(x => String(x ?? "").trim());
+    const found = detectColumns(headers);
+
+    const score = [
+      found.date,
+      found.desc,
+      found.amount,
+      found.debit,
+      found.credit
+    ].filter(x => x >= 0).length;
+
+    if (
+      found.date >= 0 &&
+      found.desc >= 0 &&
+      (found.debit >= 0 || found.credit >= 0 || found.amount >= 0) &&
+      score >= 3
+    ) {
+      headerIndex = i;
+      cols = found;
+      break;
+    }
+  }
+
+  // Fallback for simple files without recognizable headers.
+  if (headerIndex < 0) {
+    headerIndex = 0;
+    cols = {
+      date: 0, desc: 1, amount: 2,
+      debit: -1, credit: -1, type: -1, balance: -1
+    };
+  }
+
+  const out = [];
+
+  for (let i = headerIndex + 1; i < rows.length; i++) {
+    const r = rows[i];
+    if (!r || !r.some(x => String(x ?? "").trim())) continue;
+
+    const date = parseDate(r[cols.date]);
+    const description = String(r[cols.desc] ?? "").trim();
+
+    const debit = cols.debit >= 0
+      ? parseAmount(r[cols.debit]) : NaN;
+    const credit = cols.credit >= 0
+      ? parseAmount(r[cols.credit]) : NaN;
+    const amount = cols.amount >= 0
+      ? parseAmount(r[cols.amount]) : NaN;
+    const type = cols.type >= 0
+      ? String(r[cols.type] ?? "").toLowerCase() : "";
+
+    let signed;
+
+    const hasDebit = Number.isFinite(debit) && debit !== 0;
+    const hasCredit = Number.isFinite(credit) && credit !== 0;
+
+    if (hasDebit || hasCredit) {
+      signed =
+        (hasCredit ? Math.abs(credit) : 0) -
+        (hasDebit ? Math.abs(debit) : 0);
+    } else if (Number.isFinite(amount)) {
+      signed = amount;
+
+      if (/\bdr\b|debit|withdraw/i.test(type)) {
+        signed = -Math.abs(amount);
+      } else if (/\bcr\b|credit|deposit/i.test(type)) {
+        signed = Math.abs(amount);
+      }
+    } else {
+      continue;
+    }
+
+    if (!description && !date) continue;
+
+    if (
+      Math.abs(signed) === 0 &&
+      (!description || /total|opening balance|closing balance/i.test(description))
+    ) continue;
+
+    out.push({
+      id: state.nextId++,
+      date,
+      description: description || "(No description)",
+      amount: signed,
+      type: signed >= 0 ? "credit" : "debit",
+      category: categorize(description),
+      balance: cols.balance >= 0
+        ? parseAmount(r[cols.balance]) : NaN,
+      source: filename,
+      sheet: sheetName,
+      row: i + 1,
+      raw: r.map(x => String(x ?? ""))
+    });
+  }
+
+  return out;
+}
+
+
+async function readFile(file) {
+  let ext = file.name.split(".").pop().toLowerCase();
+
+  if (ext === "csv" || ext === "tsv") {
+    let text = await file.text();
+
+    // Remove UTF-8 BOM, if present.
+    text = text.replace(/^\uFEFF/, "");
+
+    // Detect the delimiter using the likely bank-header row,
+    // rather than the first line containing the bank name.
+    let lines = text.split(/\r?\n/).filter(line => line.trim());
+    let headerLine = lines.find(line => {
+      let normalized = normalizeHeader(line);
+      return normalized.includes("date") &&
+        (normalized.includes("narration") ||
+         normalized.includes("description") ||
+         normalized.includes("particular") ||
+         normalized.includes("details"));
+    }) || lines[0] || "";
+
+    let delimiter = "\t";
+
+    if (ext === "tsv") {
+      delimiter = "\t";
+    } else {
+      let candidates = [",", ";", "\t", "|"];
+      delimiter = candidates.reduce((best, candidate) => {
+        return headerLine.split(candidate).length >
+          headerLine.split(best).length
+          ? candidate
+          : best;
+      }, candidates[0]);
+    }
+
+    let rows = lines.map(line => splitDelimited(line, delimiter));
+
+    return rowsToTransactions(rows, file.name);
+  }
+
+  if (ext === "xlsx" || ext === "xls") {
+    let buf = await file.arrayBuffer();
+    let wb = XLSX.read(buf, { type: "array", cellDates: true });
+    let all = [];
+
+    for (const name of wb.SheetNames) {
+      let rows = XLSX.utils.sheet_to_json(
+        wb.Sheets[name],
+        { header: 1, raw: true, defval: "" }
+      );
+      all.push(...rowsToTransactions(rows, file.name, name));
+    }
+
+    return all;
+  }
+
+  if (ext === "pdf") {
+    let pdf = await pdfjsLib.getDocument({
+      data: await file.arrayBuffer()
+    }).promise;
+
+    let text = "";
+
+    for (let p = 1; p <= pdf.numPages; p++) {
+      let page = await pdf.getPage(p);
+      let content = await page.getTextContent();
+      text += "\n" + content.items.map(i => i.str).join(" ");
+    }
+
+    if (text.trim().length < 25) {
+      throw Error(
+        "This PDF appears scanned or contains no selectable text. OCR is needed before import."
+      );
+    }
+
+    return parsePdfText(text, file.name);
+  }
+
+  if (ext === "txt") {
+    let text = await file.text();
+    return parsePdfText(text, file.name);
+  }
+
+  throw Error(
+    "Unsupported format. Use CSV, TSV, XLSX, XLS, PDF or TXT."
+  );
+}
+
+function splitDelimited(line,delimiter){let out=[],cur="",quote=false;for(let i=0;i<line.length;i++){let c=line[i];if(c==='"'&&line[i+1]==='"'&&quote){cur+='"';i++}else if(c==='"')quote=!quote;else if(c===delimiter&&!quote){out.push(cur.trim());cur=""}else cur+=c}out.push(cur.trim());return out}
+
+
+function parsePdfTextLegacy(text, filename) {
+  // Repair spaces introduced by PDF text extraction.
+  text = text
+    .replace(/\u00a0/g, " ")
+    .replace(/[−–—]/g, "-")
+    .replace(/\s*\.\s*(\d{2})\b/g, ".$1")
+    .replace(/(\d)\s*,\s*(\d{2,3})/g, "$1,$2")
+    .replace(/\s+/g, " ");
+
+  const yearMatch = text.match(
+    /Statement Period:\s*[\d]{1,2}[-/ ]([A-Za-z]{3})[-/ ](\d{4})/i
+  );
+  const statementYear = yearMatch
+    ? Number(yearMatch[2])
+    : new Date().getFullYear();
+
+  const monthNames = {
+    jan: 1, feb: 2, mar: 3, apr: 4,
+    may: 5, jun: 6, jul: 7, aug: 8,
+    sep: 9, oct: 10, nov: 11, dec: 12
+  };
+
+  function normalizeDate(value) {
+    const m = value.match(
+      /^(\d{1,2})[-/. ]([A-Za-z]{3})$/
+    );
+
+    if (m) {
+      const month = monthNames[m[2].toLowerCase()];
+      if (!month) return value;
+
+      return `${statementYear}-${String(month).padStart(2, "0")}-${String(Number(m[1])).padStart(2, "0")}`;
+    }
+
+    const numeric = value.match(
+      /^(\d{1,2})[/. -](\d{1,2})[/. -](\d{2,4})$/
+    );
+
+    if (numeric) {
+      let year = Number(numeric[3]);
+      if (year < 100) year += 2000;
+
+      return `${year}-${String(Number(numeric[2])).padStart(2, "0")}-${String(Number(numeric[1])).padStart(2, "0")}`;
+    }
+
+    return value;
+  }
+
+  function moneyValue(value) {
+    if (!value || /PLACEHOLDER/i.test(value)) return "";
+
+    const cleaned = value
+      .replace(/₹|INR/gi, "")
+      .replace(/,/g, "")
+      .replace(/\b(CR|DR)\b/gi, "")
+      .replace(/[()\s]/g, "");
+
+    const number = Number(cleaned);
+    return Number.isFinite(number) ? String(number) : "";
+  }
+
+  // Find dates such as 01-Sep and 01/09/2026.
+  const datePattern =
+    /\b(?:\d{1,2}[-/. ](?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)|\d{1,2}[/. -]\d{1,2}[/. -]\d{2,4}|\d{4}[/. -]\d{1,2}[/. -]\d{1,2})\b/gi;
+
+  // Mark standalone dash placeholders without confusing them
+  // with hyphens inside descriptions such as E-COM.
+  const cleanedText = text.replace(/\s-\s/g, " PLACEHOLDER ");
+
+  const rows = [];
+  const lines = cleanedText.split(
+    /(?=\b(?:\d{1,2}[-/. ](?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)|\d{1,2}[/. -]\d{1,2}[/. -]\d{2,4}|\d{4}[/. -]\d{1,2}[/. -]\d{1,2})\b)/i
+  );
+
+  const amountPattern =
+    /₹\s*\d[\d,]*\s*\.\s*\d{2}|\b\d[\d,]*\s*\.\s*\d{2}\b|PLACEHOLDER/gi;
+
+  for (const line of lines) {
+    const dateMatch = datePattern.exec(line);
+    datePattern.lastIndex = 0;
+
+    if (!dateMatch) continue;
+
+    const date = normalizeDate(dateMatch[0]);
+    const rest = line.slice(
+      dateMatch.index + dateMatch[0].length
+    ).trim();
+
+    if (!rest || /OPENING BALANCE|CLOSING BALANCE|TOTAL DEPOSITS|TOTAL WITHDRAWALS/i.test(rest)) {
+      continue;
+    }
+
+    const amounts = [...rest.matchAll(amountPattern)];
+
+    // This statement layout has Withdrawal, Deposit and Balance
+    // as its final three monetary columns.
+    if (amounts.length < 3) continue;
+
+    const lastThree = amounts.slice(-3);
+    const firstColumnIndex = lastThree[0].index;
+
+    let description = rest.slice(0, firstColumnIndex)
+      .replace(/[|:]+$/g, "")
+      .trim();
+
+    if (!description) continue;
+
+    const withdrawal = moneyValue(lastThree[0][0]);
+    const deposit = moneyValue(lastThree[1][0]);
+    const balance = moneyValue(lastThree[2][0]);
+
+    if (!withdrawal && !deposit && !balance) continue;
+
+    rows.push([
+      date,
+      description,
+      withdrawal,
+      deposit,
+      balance
+    ]);
+  }
+
+  if (!rows.length) {
+    throw new Error(
+      "PDF_DEBUG: No transactions recognized. Check the extracted PDF text and its column layout."
+    );
+  }
+
+  return rowsToTransactions(
+    [[
+      "Date",
+      "Narration / Transaction Details",
+      "Withdrawals (Dr)",
+      "Deposits (Cr)",
+      "Balance"
+    ], ...rows],
+    filename
+  );
+}
+
+
+function parsePdfText(text, filename) {
+  try {
+    // Keep the existing, working PDF parser as the first choice.
+    return parsePdfTextLegacy(text, filename);
+  } catch (error) {
+    // If its layout doesn't match, try the alternate layout parser.
+    return parsePdfTextFallback(text, filename);
+  }
+}
+
+function parsePdfTextFallback(text, filename) {
+  const source = String(text || "")
+    .replace(/\u00a0/g, " ")
+    .replace(/[−–—]/g, "-")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  const dateRe =
+    /\b(?:\d{4}[-/.]\d{1,2}[-/.]\d{1,2}|\d{1,2}[-/.]\d{1,2}[-/.]\d{2,4}|\d{1,2}[-/. ](?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[-/. ]?\d{0,4})\b/gi;
+
+  const dates = [...source.matchAll(dateRe)];
+
+  if (!dates.length) {
+    throw new Error(
+      "This PDF layout is not recognized. The statement may need OCR or a bank-specific parser."
+    );
+  }
+
+  function fixDate(value) {
+    const iso = value.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$/);
+
+    if (iso) {
+      return `${iso[1]}-${String(Number(iso[2])).padStart(2, "0")}-${String(Number(iso[3])).padStart(2, "0")}`;
+    }
+
+    const named = value.match(
+      /^(\d{1,2})[-/. ]([A-Za-z]{3})[-/. ]?(\d{4})?$/i
+    );
+
+    const months = {
+      jan: "01", feb: "02", mar: "03", apr: "04",
+      may: "05", jun: "06", jul: "07", aug: "08",
+      sep: "09", oct: "10", nov: "11", dec: "12"
+    };
+
+    if (named && months[named[2].toLowerCase()]) {
+      const year = named[3] || String(new Date().getFullYear());
+      return `${year}-${months[named[2].toLowerCase()]}-${String(Number(named[1])).padStart(2, "0")}`;
+    }
+
+    const numeric = value.match(
+      /^(\d{1,2})[-/.](\d{1,2})[-/.](\d{2,4})$/
+    );
+
+    if (numeric) {
+      let year = Number(numeric[3]);
+      if (year < 100) year += 2000;
+
+      // Assumes day/month/year, common in Indian bank statements.
+      return `${year}-${String(Number(numeric[2])).padStart(2, "0")}-${String(Number(numeric[1])).padStart(2, "0")}`;
+    }
+
+    return value;
+  }
+
+  function amountNumber(value) {
+    const s = String(value || "")
+      .replace(/₹|INR/gi, "")
+      .replace(/,/g, "")
+      .replace(/[()\s]/g, "")
+      .replace(/\b(?:CR|DR)\b/gi, "");
+
+    const n = Number(s);
+    return Number.isFinite(n) ? n : NaN;
+  }
+
+  const rows = [];
+
+  for (let i = 0; i < dates.length; i++) {
+    const dateMatch = dates[i];
+    const start = dateMatch.index + dateMatch[0].length;
+    const end = i + 1 < dates.length
+      ? dates[i + 1].index
+      : source.length;
+
+    let rest = source.slice(start, end).trim();
+
+    if (
+      !rest ||
+      /opening balance|closing balance|total deposits|total withdrawals|statement summary/i.test(rest)
+    ) {
+      continue;
+    }
+
+    // Find monetary values, including amounts without decimal places.
+    const moneyRe =
+      /(?:₹\s*|INR\s*)?\(?-?\d[\d,]*(?:\.\d{1,2})?\)?(?:\s*(?:CR|DR))?/gi;
+
+    const matches = [...rest.matchAll(moneyRe)];
+
+    if (matches.length < 2) continue;
+
+    // Use the final two or three monetary columns.
+    const selected = matches.slice(-3);
+    const first = selected[0].index;
+
+    let description = rest.slice(0, first)
+      .replace(/[|:,-]+$/g, "")
+      .trim();
+
+    if (!description) continue;
+
+    if (selected.length >= 3) {
+      const values = selected.slice(-3).map(m => {
+        const n = amountNumber(m[0]);
+        return Number.isFinite(n) ? String(n) : "";
+      });
+
+      const [withdrawal, deposit, balance] = values;
+
+      if (!withdrawal && !deposit) continue;
+
+      rows.push([
+        fixDate(dateMatch[0]),
+        description,
+        withdrawal,
+        deposit,
+        balance
+      ]);
+    } else {
+      const transactionMatch = selected[0][0];
+      const balanceMatch = selected[1][0];
+
+      const value = amountNumber(transactionMatch);
+      const balance = amountNumber(balanceMatch);
+
+      if (!Number.isFinite(value)) continue;
+
+      const creditHint =
+        /\b(?:CR|CREDIT|DEPOSIT|REFUND|SALARY|INTEREST)\b/i.test(rest);
+
+      const debitHint =
+        /\b(?:DR|DEBIT|WITHDRAWAL|PURCHASE|PAYMENT)\b/i.test(rest);
+
+      // Avoid guessing when the statement doesn't indicate the direction.
+      if (creditHint === debitHint) continue;
+
+      rows.push([
+        fixDate(dateMatch[0]),
+        description,
+        debitHint ? String(Math.abs(value)) : "",
+        creditHint ? String(Math.abs(value)) : "",
+        Number.isFinite(balance) ? String(balance) : ""
+      ]);
+    }
+  }
+
+  if (!rows.length) {
+    throw new Error(
+      "Alternate PDF parser could not identify transactions. This bank's column layout needs a specific rule."
+    );
+  }
+
+  return rowsToTransactions(
+    [[
+      "Date",
+      "Narration / Transaction Details",
+      "Withdrawals (Dr)",
+      "Deposits (Cr)",
+      "Balance"
+    ], ...rows],
+    filename
+  );
+}
+
+async function handleFiles(files){if(!files.length)return;let good=0,errors=[];$("#uploadStatus").textContent=`Reading ${files.length} file(s)…`;for(const file of files){const rec={id:state.nextId++,name:file.name,size:file.size,status:"Reading",count:0,error:""};state.files.push(rec);renderFiles();try{if(file.size>100*1024*1024)throw Error("File is over 100 MB; split it into smaller files for browser stability.");let tx=await readFile(file);rec.count=tx.length;rec.status=tx.length?"Imported":"No transactions found";if(!tx.length)rec.error="No recognizable transaction rows found.";state.transactions.push(...tx);good++}catch(e){rec.status="Failed";rec.error=e.message||"Could not parse file";errors.push(`${file.name}: ${rec.error}`)}renderFiles()}$("#uploadStatus").textContent=`Finished: ${good} file(s) processed; ${state.transactions.length} transaction rows currently loaded.`+(errors.length?` Issues: ${errors.slice(0,2).join(" | ")}`:"");$("#uploadStatus2").textContent=$("#uploadStatus").textContent;renderAll()}
+function renderFiles(){const html=state.files.map(f=>`<div class="file-row"><span>▤</span><span class="fname" title="${esc(f.name)}">${esc(f.name)}</span><span class="fmeta">${f.count} rows</span><span class="tag ${f.status==="Failed"?"bad":f.status==="Imported"?"":"warn"}">${esc(f.status)}</span><button class="remove" title="Remove this file's transactions" data-remove="${f.id}">×</button>${f.error?`<div style="width:100%;color:#ffb1bc;font-size:11px">${esc(f.error)}</div>`:""}</div>`).join("");$("#fileList").innerHTML=html;$("#fileList2").innerHTML=html;$("#fileTable").innerHTML=state.files.length?`<table><thead><tr><th>File</th><th>Status</th><th>Rows</th><th>Size</th><th>Action</th></tr></thead><tbody>${state.files.map(f=>`<tr><td>${esc(f.name)}</td><td>${esc(f.status)} ${f.error?`<div style="color:#ff9aa8">${esc(f.error)}</div>`:""}</td><td>${f.count}</td><td>${(f.size/1024).toFixed(1)} KB</td><td><button class="btn" data-remove="${f.id}">Remove</button></td></tr>`).join("")}</tbody></table>`:`<div class="empty">No files yet.</div>`;$$("[data-remove]").forEach(b=>b.onclick=()=>removeFile(Number(b.dataset.remove)))}
+function removeFile(id){const f=state.files.find(x=>x.id===id);if(!f)return;state.transactions=state.transactions.filter(t=>t.source!==f.name);state.files=state.files.filter(x=>x.id!==id);renderFiles();renderAll()}
+function fmtDate(d){if(!d)return"—";return d}
+function tableHTML(rows){if(!rows.length)return`<div class="empty">No matching transactions. Import a statement or change your filters.</div>`;return `<table><thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Source</th><th style="text-align:right">Amount</th></tr></thead><tbody>${rows.map(t=>`<tr><td>${esc(fmtDate(t.date))}</td><td title="${esc(t.description)}">${esc(t.description.slice(0,70))}</td><td>${esc(t.category)}</td><td title="${esc(t.source)}">${esc(t.source)}</td><td class="amount ${t.amount>=0?"credit":"debit"}">${t.amount>=0?"+":"−"}${money(Math.abs(t.amount))}</td></tr>`).join("")}</tbody></table>`}
+function getFiltered(){let rows=[...state.transactions],q=($("#searchTx")?.value||"").toLowerCase(),type=$("#typeFilter")?.value||"all",cat=$("#categoryFilter")?.value||"all",sort=$("#sortFilter")?.value||"newest";if(q)rows=rows.filter(t=>[t.date,t.description,t.category,t.source].join(" ").toLowerCase().includes(q));if(type!=="all")rows=rows.filter(t=>t.type===type);if(cat!=="all")rows=rows.filter(t=>t.category===cat);rows.sort((a,b)=>sort==="oldest"?(a.date||"").localeCompare(b.date||""):sort==="high"?Math.abs(b.amount)-Math.abs(a.amount):(b.date||"").localeCompare(a.date||""));return rows}
+function setChartData(){let monthly={};for(const t of state.transactions){let k=t.date?t.date.slice(0,7):"Unknown date";if(!monthly[k])monthly[k]={credit:0,debit:0};if(t.amount>=0)monthly[k].credit+=t.amount;else monthly[k].debit+=Math.abs(t.amount)}let keys=Object.keys(monthly).sort().slice(-12);if(!keys.length)keys=["No data"];if(state.cashChart)state.cashChart.destroy();state.cashChart=new Chart($("#cashChart"),{type:"bar",data:{labels:keys,datasets:[{label:"Money in",data:keys.map(k=>monthly[k]?.credit||0),backgroundColor:"#4dd4a3",borderRadius:5},{label:"Money out",data:keys.map(k=>monthly[k]?.debit||0),backgroundColor:"#ff7588",borderRadius:5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:"#aab8d0",boxWidth:10,font:{size:10}}}},scales:{x:{ticks:{color:"#8797b3",font:{size:10}},grid:{display:false}},y:{ticks:{color:"#8797b3",callback:v=>new Intl.NumberFormat("en-IN",{notation:"compact"}).format(v)},grid:{color:"#26334d"}}}}});let cats={};for(const t of state.transactions)if(t.amount<0)cats[t.category]=(cats[t.category]||0)+Math.abs(t.amount);let entries=Object.entries(cats).sort((a,b)=>b[1]-a[1]).slice(0,7);if(state.catChart)state.catChart.destroy();state.catChart=new Chart($("#categoryChart"),{type:"doughnut",data:{labels:entries.length?entries.map(x=>x[0]):["No data"],datasets:[{data:entries.length?entries.map(x=>x[1]):[1],backgroundColor:["#6b8cff","#48d9ce","#f8c96b","#ff7588","#9b8cff","#4dd4a3","#e6a7ff"],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,cutout:"67%",plugins:{legend:{position:"bottom",labels:{color:"#aab8d0",boxWidth:9,padding:12,font:{size:10}}}}}})}
+function renderInsights(){const tx=state.transactions,credits=tx.filter(t=>t.amount>0),debits=tx.filter(t=>t.amount<0),sum=a=>a.reduce((s,t)=>s+t.amount,0),spent=Math.abs(sum(debits)),income=sum(credits),cats={};debits.forEach(t=>cats[t.category]=(cats[t.category]||0)+Math.abs(t.amount));let top=Object.entries(cats).sort((a,b)=>b[1]-a[1])[0];let duplicates={};tx.forEach(t=>{let k=`${t.date}|${t.amount}|${t.description.toLowerCase().replace(/\s+/g," ").trim()}`;duplicates[k]=(duplicates[k]||0)+1});let dup=Object.values(duplicates).filter(n=>n>1).reduce((s,n)=>s+n-1,0);let missing=tx.filter(t=>!t.date||!t.description).length;let unknown=tx.filter(t=>t.category==="Other").length;let recurring={};tx.filter(t=>t.amount<0).forEach(t=>{let k=t.description.toLowerCase().replace(/\d+/g,"").trim();if(k.length>3)recurring[k]=(recurring[k]||0)+1});let rec=Object.entries(recurring).filter(x=>x[1]>=3).slice(0,4);const li=(icon,txt)=>`<div class="insight"><span class="dot" style="background:${icon==="!"?"var(--gold)":icon==="×"?"var(--red)":"var(--cyan)"}"></span><span>${txt}</span></div>`;let arr=[];if(!tx.length)arr.push(li("i","Upload data to generate insights."));else{arr.push(li("i",`Recognized <b>${tx.length}</b> rows. Money in totals <b>${money(income)}</b>; money out totals <b>${money(spent)}</b>.`));if(top)arr.push(li("i",`Largest estimated spending category is <b>${esc(top[0])}</b> at <b>${money(top[1])}</b>.`));arr.push(li("i",`Net cash flow for loaded rows is <b>${money(income-spent)}</b>. This may not equal current account balance.`));if(rec.length)arr.push(li("!",`Possible repeated payments (same normalized description 3+ times): ${rec.map(x=>`${esc(x[0])} (${x[1]} rows)`).join(", ")}. Review manually.`));else arr.push(li("i","No obvious 3+ repeated debit descriptions detected."));}$("#insightList").innerHTML=arr.join("");$("#deepInsights").innerHTML=arr.join("");let q=[];if(!tx.length)q.push(li("i","No data to check yet."));else{q.push(li(missing?"!":"i",`${missing} rows missing a date or description.`));q.push(li(dup?"!":"i",`${dup} possible exact duplicate row(s) detected. Duplicates can be legitimate; review before removing.`));q.push(li(unknown?"!":"i",`${unknown} rows categorized as “Other”; descriptions may need manual review.`));q.push(li("i",`${state.files.filter(f=>f.status==="Failed").length} file(s) failed parsing. Import errors are listed under Bank documents.`));q.push(li("!",`Document authenticity cannot be established by parsing. Confirm with the bank using an official channel.`))}$("#qualityInsights").innerHTML=q.join("");}
+function renderContext(){let tx=state.transactions;let credits=tx.filter(t=>t.amount>0).reduce((s,t)=>s+t.amount,0),debits=-tx.filter(t=>t.amount<0).reduce((s,t)=>s+t.amount,0);$("#contextList").innerHTML=tx.length?[`<b>${tx.length}</b> transaction rows`,`<b>${state.files.length}</b> imported files`,`Money in: <b>${money(credits)}</b>`,`Money out: <b>${money(debits)}</b>`,`Categories: <b>${[...new Set(tx.map(t=>t.category))].join(", ")}</b>`].map(x=>`<div class="insight"><span class="dot"></span><span>${x}</span></div>`).join(""):`<div class="insight"><span class="dot"></span><span>No imported transactions yet.</span></div>`}
+function renderAll(){let tx=state.transactions,credits=tx.filter(t=>t.amount>0),debits=tx.filter(t=>t.amount<0),sum=a=>a.reduce((s,t)=>s+t.amount,0),inTotal=sum(credits),outTotal=-sum(debits);$("#netFlow").textContent=money(inTotal-outTotal);$("#totalIn").textContent=money(inTotal);$("#totalOut").textContent=money(outTotal);$("#txCount").textContent=tx.length.toLocaleString("en-IN");$("#creditCount").textContent=`${credits.length} credit transactions`;$("#debitCount").textContent=`${debits.length} debit transactions`;let dates=tx.map(t=>t.date).filter(Boolean).sort();$("#dateRange").textContent=dates.length?`${dates[0]} → ${dates[dates.length-1]}`:"No recognized dates";$("#chartTag").textContent=tx.length?"DATA LOADED":"WAITING FOR DATA";setChartData();renderInsights();renderContext();let cats=[...new Set(tx.map(t=>t.category))].sort();let old=$("#categoryFilter").value;$("#categoryFilter").innerHTML='<option value="all">All categories</option>'+cats.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join("");$("#categoryFilter").value=cats.includes(old)?old:"all";$("#txTable").innerHTML=tableHTML(getFiltered());$("#tableFoot").textContent=`Showing ${getFiltered().length} of ${tx.length} transaction rows`;let latest=[...tx].sort((a,b)=>(b.date||"").localeCompare(a.date||"")).slice(0,8);$("#recentTable").innerHTML=tableHTML(latest);renderFiles()}
+["searchTx","typeFilter","categoryFilter","sortFilter"].forEach(id=>$("#"+id).addEventListener("input",()=>{ $("#txTable").innerHTML=tableHTML(getFiltered());$("#tableFoot").textContent=`Showing ${getFiltered().length} of ${state.transactions.length} transaction rows`}));
+function exportCSV(){if(!state.transactions.length){alert("Import transaction data first.");return}let cols=["date","description","amount","type","category","balance","source"],lines=[cols.join(",")];for(const t of state.transactions){lines.push(cols.map(k=>`"${String(t[k]??"").replace(/"/g,'""')}"`).join(","))}let blob=new Blob(["\ufeff"+lines.join("\r\n")],{type:"text/csv;charset=utf-8;"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="datacapita-transactions.csv";a.click();URL.revokeObjectURL(url)}
+$("#exportCsv").onclick=exportCSV;$("#exportCsv2").onclick=exportCSV;
+function clearData(){if(!confirm("Clear all imported files and transaction rows from this session?"))return;state.transactions=[];state.files=[];renderAll();$("#uploadStatus").textContent="All session data cleared."}
+$("#clearFiles").onclick=clearData;$("#clearAll").onclick=clearData;
+function localAnswer(question){let q=question.toLowerCase(),tx=state.transactions;if(!tx.length)return"Please import a bank statement first. I can then summarize the recognized transactions. If a PDF does not parse, try exporting it from your bank as CSV or Excel.";let credits=tx.filter(t=>t.amount>0),debits=tx.filter(t=>t.amount<0),sum=a=>a.reduce((s,t)=>s+t.amount,0),income=sum(credits),spent=-sum(debits),cats={};debits.forEach(t=>cats[t.category]=(cats[t.category]||0)+Math.abs(t.amount));let top=Object.entries(cats).sort((a,b)=>b[1]-a[1]);if(/summar|overview|statement|total|balance/.test(q))return`Here's your statement summary:\n• Transactions recognized: ${tx.length}\n• Total money in: ${money(income)} (${credits.length} rows)\n• Total money out: ${money(spent)} (${debits.length} rows)\n• Net cash flow: ${money(income-spent)}\n• Date coverage: ${tx.map(t=>t.date).filter(Boolean).sort()[0]||"unknown"} to ${tx.map(t=>t.date).filter(Boolean).sort().slice(-1)[0]||"unknown"}\n\nImportant: net cash flow is not the same as account balance, and the app only counts rows it recognized.`;if(/biggest|category|spend|expense|where.*money/.test(q))return`Largest estimated spending categories:\n${top.slice(0,7).map(([k,v],i)=>`${i+1}. ${k}: ${money(v)}`).join("\n")||"No debit rows found."}\n\nCategories are inferred from descriptions, so check the labels manually.`;if(/recurr|subscription|repeat|monthly/.test(q)){let m={};debits.forEach(t=>{let k=t.description.toLowerCase().replace(/\d+/g,"").replace(/\s+/g," ").trim();m[k]=(m[k]||[]).concat(t)});let matches=Object.entries(m).filter(([k,v])=>v.length>=2).sort((a,b)=>b[1].length-a[1].length).slice(0,8);return matches.length?`Possible recurring/repeated debit descriptions:\n${matches.map(([k,v])=>`• ${k}: ${v.length} rows; total ${money(-v.reduce((s,t)=>s+t.amount,0))}`).join("\n")}\n\nRepeated text does not prove a subscription. Compare dates and amounts manually.`:"No repeated debit descriptions detected in the loaded rows."}if(/duplicate|missing|quality|unusual|anomal|fraud/.test(q)){let dup={};tx.forEach(t=>{let k=`${t.date}|${t.amount}|${t.description.toLowerCase()}`;dup[k]=(dup[k]||0)+1});let n=Object.values(dup).filter(v=>v>1).reduce((s,v)=>s+v-1,0),miss=tx.filter(t=>!t.date||!t.description).length;let high=[...debits].sort((a,b)=>a.amount-b.amount).slice(0,5);return`Data-quality review:\n• Possible exact duplicates: ${n}\n• Rows missing date/description: ${miss}\n• Largest debits: ${high.map(t=>`${t.date||"date unknown"} — ${t.description} — ${money(-t.amount)}`).join("\n")||"No debit rows"}\n\nThese are review flags, not proof of fraud or error. I cannot verify whether the document is authentic.`}if(/largest|biggest.*transaction|high.*transaction/.test(q)){return`Largest transactions by absolute amount:\n${[...tx].sort((a,b)=>Math.abs(b.amount)-Math.abs(a.amount)).slice(0,10).map(t=>`• ${t.date||"—"} | ${t.description} | ${money(t.amount)}`).join("\n")}`}return`I can help with the imported data. Try asking:\n• “Summarize my statement”\n• “What are my biggest spending categories?”\n• “Find recurring payments”\n• “Check for duplicates or missing fields”\n\nRecognized rows: ${tx.length}. For a more open-ended AI response, configure OPENAI_API_KEY on your own server. This local answer is based on simple rules, not a full language model.`}
+function addBubble(text,who){const d=document.createElement("div");d.className="bubble "+who;d.textContent=text;$("#chatBox").appendChild(d);$("#chatBox").scrollTop=$("#chatBox").scrollHeight}
+async function sendChat(){let q=$("#chatInput").value.trim();if(!q)return;$("#chatInput").value="";addBubble(q,"user");let answer;try{const res=await fetch("/api/ask",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({question:q,summary:`Files: ${state.files.map(f=>f.name).join(", ")}; ${state.transactions.length} transaction rows.`,transactions:state.transactions.slice(0,150)})});if(res.ok){const d=await res.json();answer=d.answer}else answer=localAnswer(q)}catch(e){answer=localAnswer(q)}addBubble(answer,"assistant")}
+$("#sendChat").onclick=sendChat;$("#chatInput").addEventListener("keydown",e=>{if(e.key==="Enter")sendChat()});$$(".quick").forEach(b=>b.onclick=()=>{$("#chatInput").value=b.dataset.prompt;sendChat()});
+fetch("/api/health").then(r=>r.json()).then(d=>{$("#aiState").textContent=d.aiConfigured?"CONFIGURED":"OPTIONAL / OFF";$("#aiState").className="tag "+(d.aiConfigured?"":"warn")}).catch(()=>{$("#aiState").textContent="LOCAL MODE";$("#aiState").className="tag warn"});
+renderAll();
+</script>
+</body></html>
