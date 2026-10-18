@@ -1225,31 +1225,31 @@ async function signUpEmail(){
  }catch(e){showAuthMessage(e.message||"Could not create account.",true)}
 }
 async function signOut(){if(supabaseClient)await supabaseClient.auth.signOut();session=null;user=null;transactions=[];showLanding()}
-let session = null;
+// Ensure session is declared only once globally
+if (typeof window.appSession === 'undefined') {
+  window.appSession = null;
+}
 
-// Isko safe function ke andar dalo taaki Supabase Client pehle load ho jaye
 async function syncSession() {
-  if (window.supabase && typeof window.supabase.auth !== 'undefined') {
-    const { data } = await window.supabase.auth.getSession();
-    session = data?.session || null;
+  if (typeof supabase !== 'undefined' && supabase.auth) {
+    const { data } = await supabase.auth.getSession();
+    window.appSession = data?.session || null;
 
-    window.supabase.auth.onAuthStateChange((_event, newSession) => {
-      session = newSession;
+    supabase.auth.onAuthStateChange((_event, newSession) => {
+      window.appSession = newSession;
     });
   }
 }
 
-// Page load hone par safely session sync karo
 window.addEventListener("DOMContentLoaded", syncSession);
 
 async function api(path, body) {
-  // Agar session abhi sync nahi hua toh ek baar try kar lo
-  if (!session && window.supabase) {
-    const { data } = await window.supabase.auth.getSession();
-    session = data?.session || null;
+  if (!window.appSession && typeof supabase !== 'undefined' && supabase.auth) {
+    const { data } = await supabase.auth.getSession();
+    window.appSession = data?.session || null;
   }
 
-  if (!session?.access_token) {
+  if (!window.appSession?.access_token) {
     throw new Error("Please sign in again.");
   }
 
@@ -1257,7 +1257,7 @@ async function api(path, body) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Authorization": "Bearer " + session.access_token
+      "Authorization": "Bearer " + window.appSession.access_token
     },
     body: JSON.stringify(body || {})
   });
@@ -1265,6 +1265,14 @@ async function api(path, body) {
   const d = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error(d.error || "Request failed.");
   return d;
+}
+
+// openAuth function taaki button click par error na aaye
+function openAuth() {
+  const modal = document.getElementById("authModal") || document.getElementById("loginModal");
+  if (modal) {
+    modal.classList.remove("hidden");
+  }
 }
 async function checkHealth(){
  try{const r=await fetch("/api/health");const d=await r.json();const ok=d.services?.database;
