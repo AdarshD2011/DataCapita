@@ -1240,40 +1240,17 @@ async function syncSession() {
     });
   }
 }
-
-window.addEventListener("DOMContentLoaded", syncSession);
-
-async function api(path, body) {
-  if (!window.appSession && typeof supabase !== 'undefined' && supabase.auth) {
-    const { data } = await supabase.auth.getSession();
-    window.appSession = data?.session || null;
+window.addEventListener("DOMContentLoaded", async () => {
+  await syncSession();
+  
+  // Yahan apne data load karne wale function ko call karo 
+  // (jaise loadTransactions(), init(), ya fetchData())
+  if (typeof loadTransactions === 'function') {
+    loadTransactions();
+  } else if (typeof init === 'function') {
+    init();
   }
-
-  if (!window.appSession?.access_token) {
-    throw new Error("Please sign in again.");
-  }
-
-  const r = await fetch(path, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": "Bearer " + window.appSession.access_token
-    },
-    body: JSON.stringify(body || {})
-  });
-
-  const d = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error(d.error || "Request failed.");
-  return d;
-}
-
-// openAuth function taaki button click par error na aaye
-function openAuth() {
-  const modal = document.getElementById("authModal") || document.getElementById("loginModal");
-  if (modal) {
-    modal.classList.remove("hidden");
-  }
-}
+});
 async function checkHealth(){
  try{const r=await fetch("/api/health");const d=await r.json();const ok=d.services?.database;
  $("serviceDot").style.background=ok?"#159a73":"#e6a13c";
