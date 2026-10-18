@@ -2770,10 +2770,11 @@ async function parseFile(file){
      }).filter(Boolean).join("\\n");
      pages.push(pageText);
    }
-   text=pages.join("\\n");
+   text=pages.join("\n");
    if(text.trim().length<20)throw new Error("This PDF appears scanned or has no extractable text. OCR is not included; use a text-based PDF or export the statement as CSV/XLSX.");
    parsedRows=parseStatement(text,false);
-  } else if(ext==="docx"){
+console.log("[DataCapita PDF] Extracted characters:", text.length, "Parsed rows:", parsedRows.length); 
+ } else if(ext==="docx"){
    if(!window.mammoth)throw new Error("DOCX reader could not load. Check your internet connection and try again.");
    const result=await mammoth.convertToHtml({arrayBuffer:await file.arrayBuffer()});
    const doc=new DOMParser().parseFromString(result.value,"text/html");
