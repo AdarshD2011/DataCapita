@@ -152,6 +152,294 @@ body.chat-finance-mode #page-chat-finance iframe {
   border: 0 !important;
 }
 
+
+/* DataCapita Living Graphs — isolated visual layer */
+.dc-living-backdrop {
+  --dc-glow: 131,170,255;
+  background: rgba(4,8,20,.76);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  perspective: 1200px;
+}
+
+.dc-living-backdrop[data-tone="red"] {
+  --dc-glow: 255,113,142;
+}
+
+.dc-living-backdrop[data-tone="green"] {
+  --dc-glow: 101,230,176;
+}
+
+.dc-living-backdrop[data-tone="blue"] {
+  --dc-glow: 131,170,255;
+}
+
+.dc-living-backdrop:not(.hidden) {
+  animation: dcLivingBackdropIn .3s ease both;
+}
+
+.dc-living-panel.modal {
+  box-sizing: border-box;
+  position: relative;
+  isolation: isolate;
+  width: min(1000px, 96vw);
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: clamp(17px, 3vw, 30px);
+  color: #e9efff;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(var(--dc-glow),.09), transparent 52%),
+    linear-gradient(145deg, #10192b, #090f1d 72%);
+  border: 1px solid rgba(var(--dc-glow),.42);
+  border-radius: 20px;
+  box-shadow:
+    0 0 18px rgba(var(--dc-glow),.10),
+    0 0 48px rgba(var(--dc-glow),.08),
+    0 28px 90px rgba(0,0,0,.48);
+  animation: dcLivingPanelIn .48s cubic-bezier(.2,.8,.2,1) both;
+  scrollbar-color: rgba(var(--dc-glow),.4) #10192b;
+}
+
+.dc-living-topline,
+.dc-living-status,
+.dc-living-transactions-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.dc-living-status {
+  justify-content: flex-start;
+  color: rgba(var(--dc-glow),1);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.8px;
+}
+
+.dc-living-dot {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 7px;
+  border-radius: 50%;
+  background: rgba(var(--dc-glow),1);
+  box-shadow: 0 0 12px rgba(var(--dc-glow),.6);
+}
+
+.dc-living-close {
+  float: none;
+  color: #e9efff;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.10);
+  cursor: pointer;
+}
+
+.dc-living-panel h2 {
+  margin: 20px 0 6px;
+  color: #f4f7ff;
+  font-size: clamp(22px, 3vw, 30px);
+  letter-spacing: -.7px;
+}
+
+.dc-living-panel > p {
+  color: #a9b8d2;
+  font-size: 13px;
+}
+
+.dc-living-visual {
+  position: relative;
+  height: 300px;
+  min-height: 230px;
+  margin-top: 20px;
+  padding: 24px 12px 12px;
+  overflow: hidden;
+  border: 1px solid rgba(var(--dc-glow),.32);
+  border-radius: 15px;
+  background:
+    radial-gradient(ellipse at center, rgba(var(--dc-glow),.09), transparent 68%),
+    rgba(5,11,23,.72);
+  box-shadow:
+    inset 0 0 24px rgba(var(--dc-glow),.055),
+    0 0 20px rgba(var(--dc-glow),.055);
+}
+
+.dc-living-visual::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  box-shadow: inset 0 0 22px rgba(var(--dc-glow),.06);
+}
+
+.dc-living-visual-label {
+  position: absolute;
+  top: 10px;
+  left: 13px;
+  color: #7f91b0;
+  font-size: 9px;
+  letter-spacing: 1.4px;
+}
+
+#dcGraphLarge {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.dc-living-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0,1fr));
+  gap: 10px;
+  margin-top: 13px;
+}
+
+.dc-living-metric {
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid rgba(var(--dc-glow),.18);
+  border-radius: 12px;
+  background: rgba(255,255,255,.025);
+}
+
+.dc-living-metric span {
+  display: block;
+  color: #8597b6;
+  font-size: 9px;
+  letter-spacing: 1px;
+}
+
+.dc-living-metric strong {
+  display: block;
+  margin-top: 8px;
+  overflow-wrap: anywhere;
+  color: rgba(var(--dc-glow),1);
+  font-size: clamp(14px,2vw,20px);
+}
+
+.dc-living-transactions-head {
+  margin-top: 27px;
+  padding-bottom: 13px;
+  border-bottom: 1px solid rgba(255,255,255,.09);
+}
+
+.dc-living-transactions-head h3 {
+  margin: 0;
+  color: #edf2ff;
+  font-size: 16px;
+}
+
+.dc-living-transactions-head p {
+  margin: 5px 0 0;
+  color: #8799b7;
+  font-size: 11px;
+}
+
+.dc-living-record-badge {
+  flex-shrink: 0;
+  padding: 7px 9px;
+  color: rgba(var(--dc-glow),1);
+  border: 1px solid rgba(var(--dc-glow),.23);
+  border-radius: 8px;
+  background: rgba(var(--dc-glow),.06);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .6px;
+}
+
+.dc-living-transactions {
+  max-height: 300px;
+  overflow: auto;
+  margin-top: 12px;
+  scrollbar-color: rgba(var(--dc-glow),.35) transparent;
+}
+
+.dc-living-transactions table {
+  width: 100%;
+  min-width: 600px;
+  border-collapse: collapse;
+  color: #dbe5f8;
+  font-size: 12px;
+}
+
+.dc-living-transactions th {
+  padding: 12px 10px;
+  color: #91a4c5;
+  background: rgba(255,255,255,.035);
+  text-align: left;
+  font-size: 10px;
+  letter-spacing: .5px;
+}
+
+.dc-living-transactions td {
+  padding: 12px 10px;
+  border-bottom: 1px solid rgba(255,255,255,.055);
+}
+
+.dc-living-transactions tbody tr:hover {
+  background: rgba(var(--dc-glow),.055);
+}
+
+.dc-living-transactions .empty {
+  padding: 22px 10px;
+  color: #9cacc5;
+}
+
+@keyframes dcLivingBackdropIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes dcLivingPanelIn {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(.965);
+    filter: brightness(.75);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: brightness(1);
+  }
+}
+
+@media (max-width: 600px) {
+  .dc-living-panel.modal {
+    width: 96vw;
+    max-height: 92vh;
+    padding: 16px;
+    border-radius: 16px;
+  }
+
+  .dc-living-visual {
+    height: 250px;
+    min-height: 210px;
+  }
+
+  .dc-living-metrics {
+    gap: 6px;
+  }
+
+  .dc-living-metric {
+    padding: 10px 8px;
+  }
+
+  .dc-living-metric span {
+    font-size: 8px;
+  }
+
+  .dc-living-transactions-head {
+    align-items: flex-start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dc-living-backdrop:not(.hidden),
+  .dc-living-panel.modal {
+    animation-duration: .01ms;
+  }
+}
+
 </style>
 
 
@@ -3136,17 +3424,53 @@ init();
   </div>
 </div>
 
-<!-- DataCapita Graph Explorer -->
-<div id="dcGraphModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="dcGraphTitle">
-  <div class="modal" style="width:min(1000px,96vw);max-height:90vh;overflow:auto">
-    <button type="button" class="close" onclick="dcCloseGraph()">Close ×</button>
+
+<!-- DataCapita Living Graphs -->
+<div id="dcGraphModal" class="modal-backdrop hidden dc-living-backdrop"
+     role="dialog" aria-modal="true" aria-labelledby="dcGraphTitle"
+     data-tone="blue">
+  <div class="modal dc-living-panel">
+    <div class="dc-living-topline">
+      <span class="dc-living-status">
+        <span class="dc-living-dot"></span>
+        LIVE GRAPH EXPLORER
+      </span>
+      <button type="button" class="close dc-living-close"
+              onclick="dcCloseGraph()">Close ×</button>
+    </div>
+
     <h2 id="dcGraphTitle">Graph Explorer</h2>
     <p id="dcGraphSummary">Select a graph section to inspect its transactions.</p>
-    <div style="height:320px;min-height:240px;background:#f8f9ff;border:1px solid #e7eaf5;border-radius:12px;padding:10px">
-      <canvas id="dcGraphLarge" style="width:100%;height:100%;display:block"></canvas>
+
+    <div class="dc-living-visual">
+      <div class="dc-living-visual-label">FINANCIAL VISUALIZATION</div>
+      <canvas id="dcGraphLarge"></canvas>
     </div>
-    <h3 style="margin:22px 0 10px;font-size:15px">Related Transactions</h3>
-    <div id="dcGraphTransactions" style="overflow-x:auto"></div>
+
+    <div class="dc-living-metrics" id="dcGraphMetrics">
+      <div class="dc-living-metric">
+        <span>SELECTED VIEW</span>
+        <strong id="dcGraphMetricName">Overview</strong>
+      </div>
+      <div class="dc-living-metric">
+        <span>TRANSACTIONS</span>
+        <strong id="dcGraphMetricCount">0</strong>
+      </div>
+      <div class="dc-living-metric">
+        <span>NET / TOTAL</span>
+        <strong id="dcGraphMetricTotal">₹0</strong>
+      </div>
+    </div>
+
+    <div class="dc-living-transactions-head">
+      <div>
+        <h3>Transaction Intelligence</h3>
+        <p>Records associated with this graph selection</p>
+      </div>
+      <span class="dc-living-record-badge" id="dcGraphRecordBadge">0 RECORDS</span>
+    </div>
+
+    <div id="dcGraphTransactions" class="dc-living-transactions"></div>
   </div>
 </div>
 
@@ -3181,7 +3505,8 @@ init();
     ctx.drawImage(source, 0, 0, box.width, box.height);
   }
 
-  function dcShow(title, summary, sourceCanvas, rows) {
+  
+function dcShow(title, summary, sourceCanvas, rows) {
     const modal = $dc("dcGraphModal");
     const heading = $dc("dcGraphTitle");
     const summaryEl = $dc("dcGraphSummary");
@@ -3189,18 +3514,95 @@ init();
 
     if (!modal || !heading || !summaryEl || !list) return;
 
+    rows = Array.isArray(rows) ? rows : [];
+
+    const normalizedTitle = String(title || "").toLowerCase();
+    const isExpense = /expense|spending/.test(normalizedTitle);
+    const isIncome = /income/.test(normalizedTitle);
+    const isSavings = /saving|net/.test(normalizedTitle);
+
+    const tone = isExpense ? "red" : isIncome ? "green" : "blue";
+    modal.dataset.tone = tone;
+
     heading.textContent = title;
     summaryEl.textContent = summary;
+
+    const metricName = $dc("dcGraphMetricName");
+    const metricCount = $dc("dcGraphMetricCount");
+    const metricTotal = $dc("dcGraphMetricTotal");
+    const recordBadge = $dc("dcGraphRecordBadge");
+
+    const totalIncome = rows
+      .filter(t => t.kind === "income")
+      .reduce((sum, t) => sum + Math.abs(Number(t.amount) || 0), 0);
+
+    const totalExpense = rows
+      .filter(t => t.kind === "expense")
+      .reduce((sum, t) => sum + Math.abs(Number(t.amount) || 0), 0);
+
+    const netSavings = totalIncome - totalExpense;
+
+    if (metricName) {
+      metricName.textContent = isSavings ? "Net savings" :
+        isExpense ? "Spending" : isIncome ? "Income" : "Overview";
+    }
+
+    if (metricCount) {
+      metricCount.textContent = rows.length.toLocaleString("en-IN");
+    }
+
+    if (metricTotal) {
+      if (isSavings) {
+        metricTotal.textContent = dcMoney(netSavings);
+        metricTotal.style.color = netSavings < 0 ? "#ff718e" : "#83aaff";
+      } else {
+        const total = rows.reduce(
+          (sum, t) => sum + Math.abs(Number(t.amount) || 0), 0
+        );
+        metricTotal.textContent = dcMoney(total);
+        metricTotal.style.color = "";
+      }
+    }
+
+    if (recordBadge) {
+      recordBadge.textContent =
+        rows.length.toLocaleString("en-IN") + " RECORDS";
+    }
+
     list.replaceChildren();
+
+    if (isSavings) {
+      const rate = totalIncome > 0
+        ? (netSavings / totalIncome) * 100
+        : null;
+
+      const note = document.createElement("div");
+      note.style.cssText =
+        "padding:12px 14px;margin-bottom:12px;border:1px solid rgba(131,170,255,.2);border-radius:10px;background:rgba(131,170,255,.045);color:#c7d5ed;font-size:12px;line-height:1.8";
+
+      const incomeLine = document.createElement("div");
+      incomeLine.textContent = "Income in these records: " + dcMoney(totalIncome);
+
+      const expenseLine = document.createElement("div");
+      expenseLine.textContent = "Expenses in these records: " + dcMoney(totalExpense);
+
+      const rateLine = document.createElement("div");
+      rateLine.textContent = "Savings rate: " +
+        (rate === null ? "Not available (no income records)" : rate.toFixed(1) + "%");
+
+      note.append(incomeLine, expenseLine, rateLine);
+      list.appendChild(note);
+    }
 
     if (!rows.length) {
       const empty = document.createElement("p");
       empty.className = "empty";
-      empty.textContent = "No matching transactions were found for this selection.";
+      empty.textContent =
+        "No matching transactions were found for this selection.";
       list.appendChild(empty);
     } else {
       const table = document.createElement("table");
-      table.style.minWidth = "650px";
+      table.style.minWidth = "600px";
 
       const thead = document.createElement("thead");
       const headerRow = document.createElement("tr");
@@ -3218,18 +3620,26 @@ init();
 
       rows.forEach(t => {
         const tr = document.createElement("tr");
+
+        const amount = Math.abs(Number(t.amount) || 0);
         const values = [
-          t.date,
+          t.date || "—",
           t.description || t.merchant || "Transaction",
           t.category || "Other",
-          t.kind,
-          dcMoney(t.amount)
+          t.kind || "—",
+          dcMoney(amount)
         ];
 
         values.forEach((value, index) => {
           const td = document.createElement("td");
           td.textContent = dcSafeText(value);
-          if (index === 4) td.style.fontWeight = "800";
+
+          if (index === 4) {
+            td.style.fontWeight = "800";
+            td.style.color = t.kind === "expense" ? "#ff9aaf" :
+              t.kind === "income" ? "#79e6b5" : "#c1d0ff";
+          }
+
           tr.appendChild(td);
         });
 
