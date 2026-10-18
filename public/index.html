@@ -440,6 +440,36 @@ body.chat-finance-mode #page-chat-finance iframe {
   }
 }
 
+
+/* DataCapita graph-to-panel morph layer */
+#dcGraphMorphLayer {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+}
+
+#dcGraphMorphCanvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+#dcGraphMorphLayer.dc-morph-active {
+  visibility: visible;
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #dcGraphMorphLayer {
+    transition: none !important;
+  }
+}
+
 </style>
 
 
@@ -3425,12 +3455,14 @@ init();
 </div>
 
 
+
 <!-- DataCapita Living Graphs -->
 <div id="dcGraphModal" class="modal-backdrop hidden dc-living-backdrop"
      role="dialog" aria-modal="true" aria-labelledby="dcGraphTitle"
      data-tone="blue">
   <div class="modal dc-living-panel">
-    <div class="dc-living-topline">
+ 
+  <div class="dc-living-topline">
       <span class="dc-living-status">
         <span class="dc-living-dot"></span>
         LIVE GRAPH EXPLORER
@@ -3473,7 +3505,9 @@ init();
     <div id="dcGraphTransactions" class="dc-living-transactions"></div>
   </div>
 </div>
-
+<div id="dcGraphMorphLayer" aria-hidden="true">
+  <canvas id="dcGraphMorphCanvas"></canvas>
+</div>
 <script>
 (function () {
   const $dc = id => document.getElementById(id);
@@ -3505,7 +3539,250 @@ init();
     ctx.drawImage(source, 0, 0, box.width, box.height);
   }
 
-  
+
+function dcAnimateGraphPiece(sourceCanvas, index) {
+  return new Promise(resolve => {
+    const layer = document.getElementById("dcGraphMorphLayer");
+    const canvas = document.getElementById("dcGraphMorphCanvas");
+    const modal = document.getElementById("dcGraphModal");
+    const list = document.getElementById("dcGraphTransactions");
+
+    if (!layer || !canvas || !sourceCanvas || !modal || !list) {
+      resolve();
+      return;
+    }
+
+    const ctx = canvas.getContext("2d");
+    const graphRect = sourceCanvas.getBoundingClientRect();
+
+    if (!graphRect.width || !graphRect.height) {
+      resolve();
+      return;
+    }
+
+    const dpr = window.devicePixelRatio || 1;
+
+    canvas.width = Math.round(window.innerWidth * dpr);
+    canvas.height = Math.round(window.innerHeight * dpr);
+    canvas.style.width = window.innerWidth + "px";
+    canvas.style.height = window.innerHeight + "px";
+
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    const colors = ["#65e6b0", "#ff718e", "#83aaff"];
+    const color = colors[index] || "#83aaff";
+    const chartType =
+      document.getElementById("fhpChartType")?.value || "bar";
+
+    function readMoney(id) {
+      const el = document.getElementById(id);
+      if (!el) return 0;
+
+      const raw = el.value || el.textContent || "0";
+      const amount = Number(String(raw).replace(/[₹,\s]/g, ""));
+
+      return Number.isFinite(amount) ? Math.max(0, amount) : 0;
+    }
+
+    const income = readMoney("fhpIncome");
+    const expenses = readMoney("fhpExpenses");
+    const values = [income, expenses, Math.max(0, income - expenses)];
+
+    let startX = graphRect.left + graphRect.width * 0.35;
+    let startY = graphRect.top + Math.min(graphRect.height * 0.39, 92);
+    let ringThickness = 14;
+
+    if (chartType === "donut") {
+      const radius = Math.min(65, graphRect.width * 0.21);
+      const total = values.reduce((sum, value) => sum + value, 0);
+
+      ringThickness = radius * 0.41;
+
+      if (total > 0 && values[index] > 0) {
+        let angle = -Math.PI / 2;
+
+        for (let i = 0; i < index; i++) {
+          angle += values[i] / total * Math.PI * 2;
+        }
+
+        const segmentAngle = values[index] / total * Math.PI * 2;
+        const middleAngle = angle + segmentAngle / 2;
+        const middleRadius = radius * 0.795;
+
+        startX = graphRect.left +
+          graphRect.width * 0.35 +
+          Math.cos(middleAngle) * middleRadius;
+
+        startY = graphRect.top +
+          Math.min(graphRect.height * 0.39, 92) +
+          Math.sin(middleAngle) * middleRadius;
+      }
+    } else if (chartType === "bar") {
+      const width = graphRect.width;
+      const height = graphRect.height;
+      const pad = 28;
+      const bottom = height - 35;
+      const plotHeight = bottom - 22;
+      const max = Math.max(1, ...values) * 1.22;
+      const slot = (width - pad - 18) / 3;
+      const barWidth = Math.min(48, slot * 0.53);
+      const barHeight = values[index] / max * plotHeight;
+      const barX = pad + slot * index + (slot - barWidth) / 2;
+      const barY = bottom - barHeight;
+
+      if (barHeight > 0) {
+        startX = graphRect.left + barX + barWidth / 2;
+        startY = graphRect.top + barY;
+        ringThickness = Math.max(8, barWidth);
+      }
+    }
+
+    const panel = list.closest(
+      ".modal-content, .modal-card, .modal-panel, .modal-dialog, .panel"
+    ) || list.parentElement;
+
+    if (!panel) {
+      resolve();
+      return;
+    }
+
+    const panelRect = panel.getBoundingClientRect();
+
+    const target = {
+      left: panelRect.left - 3,
+      top: panelRect.top - 3,
+      width: panelRect.width + 6,
+      height: panelRect.height + 6
+    };
+
+    if (target.width <= 0 || target.height <= 0) {
+      resolve();
+      return;
+    }
+
+    const endX = target.left + target.width / 2;
+    const endY = target.top + target.height / 2;
+
+    layer.classList.add("dc-morph-active");
+
+    const duration = 3000;
+    const holdDuration = 650;
+    const fadeDuration = 450;
+    const startTime = performance.now();
+
+    function ease(t) {
+      return t * t * (3 - 2 * t);
+    }
+
+    function drawRoundedRect(x, y, width, height, radius) {
+      const r = Math.min(radius, width / 2, height / 2);
+
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + width - r, y);
+      ctx.quadraticCurveTo(x + width, y, x + width, y + r);
+      ctx.lineTo(x + width, y + height - r);
+      ctx.quadraticCurveTo(
+        x + width, y + height,
+        x + width - r, y + height
+      );
+      ctx.lineTo(x + r, y + height);
+      ctx.quadraticCurveTo(x, y + height, x, y + height - r);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+    }
+
+    function frame(now) {
+      const elapsed = now - startTime;
+      const progress = Math.min(1, elapsed / duration);
+
+      const travelEnd = 0.32;
+      const growStart = 0.25;
+      const growEnd = 0.88;
+
+      const fade = elapsed <= duration + holdDuration
+        ? 1
+        : Math.max(
+            0,
+            1 - (elapsed - duration - holdDuration) / fadeDuration
+          );
+
+      ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+      ctx.save();
+
+      ctx.strokeStyle = color;
+      ctx.fillStyle = color;
+      ctx.shadowColor = color;
+      ctx.shadowBlur = 26;
+      ctx.globalAlpha = fade;
+
+      if (progress < growEnd) {
+        const travel = ease(Math.min(1, progress / travelEnd));
+        const curveX = startX + (endX - startX) * travel;
+        const curveY = startY + (endY - startY) * travel;
+
+        if (progress < travelEnd) {
+          ctx.beginPath();
+          ctx.moveTo(startX, startY);
+          ctx.quadraticCurveTo(
+            startX + (endX - startX) * 0.55,
+            startY - 35,
+            curveX,
+            curveY
+          );
+
+          ctx.lineCap = "round";
+          ctx.lineWidth =
+            ringThickness * (1 - travel) + 4 * travel;
+          ctx.stroke();
+        }
+
+        const grow = ease(
+          Math.max(
+            0,
+            Math.min(1, (progress - growStart) / (growEnd - growStart))
+          )
+        );
+
+        const width = 28 + (target.width - 28) * grow;
+        const height = 28 + (target.height - 28) * grow;
+        const x = endX - width / 2;
+        const y = endY - height / 2;
+
+        ctx.lineWidth = 3.5;
+        drawRoundedRect(x, y, width, height, 16 * (1 - grow) + 8 * grow);
+        ctx.stroke();
+      } else {
+        ctx.lineWidth = 3.5;
+        drawRoundedRect(
+          target.left,
+          target.top,
+          target.width,
+          target.height,
+          8
+        );
+        ctx.stroke();
+      }
+
+      ctx.restore();
+
+      if (elapsed < duration + holdDuration + fadeDuration) {
+        requestAnimationFrame(frame);
+      } else {
+        ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+        layer.classList.remove("dc-morph-active");
+        resolve();
+      }
+    }
+
+    requestAnimationFrame(frame);
+  });
+}
+
+
+   
+
 function dcShow(title, summary, sourceCanvas, rows) {
     const modal = $dc("dcGraphModal");
     const heading = $dc("dcGraphTitle");
@@ -3653,7 +3930,9 @@ function dcShow(title, summary, sourceCanvas, rows) {
     modal.classList.remove("hidden");
     document.body.style.overflow = "hidden";
 
-    requestAnimationFrame(() => dcDrawLarge(sourceCanvas));
+  if (sourceCanvas !== $dc("fhpHealthCanvas")) {
+  requestAnimationFrame(() => dcDrawLarge(sourceCanvas));
+}
   }
 
   window.dcCloseGraph = function () {
@@ -3670,43 +3949,68 @@ function dcShow(title, summary, sourceCanvas, rows) {
     if (event.key === "Escape") window.dcCloseGraph();
   });
 
-  // Financial Health: click a graph section to see matching records.
   const healthCanvas = $dc("fhpHealthCanvas");
+  // Financial Health: click a graph section to see matching records.
 
   if (healthCanvas) {
-    healthCanvas.addEventListener("click", event => {
-      if (typeof window.drawFinancialHealthGraph !== "function") return;
+  
+healthCanvas.addEventListener("click", async event => {
+  if (typeof window.drawFinancialHealthGraph !== "function") return;
+  if (healthCanvas.__dcAnimating) return;
 
-      if (typeof healthCanvas.onmousemove === "function") {
-        healthCanvas.onmousemove(event);
-      }
+  if (typeof healthCanvas.onmousemove === "function") {
+    healthCanvas.onmousemove(event);
+  }
 
-      const index = healthCanvas.__fhpHover;
-      if (index !== 0 && index !== 1 && index !== 2) {
-        dcShow(
-          "Financial Health Graph",
-          "Choose a visible Income, Expenses or Savings section.",
-          healthCanvas,
-          []
-        );
-        return;
-      }
+  const index = healthCanvas.__fhpHover;
 
-      const key = typeof currentMonth === "function" ? currentMonth() : "";
-      const kinds = index === 0 ? ["income"] :
-                    index === 1 ? ["expense"] : ["income", "expense"];
+  if (index !== 0 && index !== 1 && index !== 2) {
+    dcShow(
+      "Financial Health Graph",
+      "Choose a visible Income, Expenses or Savings section.",
+      healthCanvas,
+      []
+    );
+    return;
+  }
 
-      const rows = (window.transactions || transactions || []).filter(t =>
-        monthKey(t.date) === key && kinds.includes(t.kind)
-      );
+  const key = typeof currentMonth === "function" ? currentMonth() : "";
+  const kinds = index === 0
+    ? ["income"]
+    : index === 1
+      ? ["expense"]
+      : ["income", "expense"];
 
-      const title = ["Income", "Expenses", "Savings"][index] + " · " + key;
-      const summary = index === 2
-        ? "Income and expense records used to calculate this month's net savings."
-        : "Transactions recorded for this category in the current month.";
+  const allTransactions =
+    window.transactions ||
+    (typeof transactions !== "undefined" ? transactions : []);
 
-      dcShow(title, summary, healthCanvas, rows);
-    });
+  const rows = allTransactions.filter(t =>
+    typeof monthKey === "function" &&
+    monthKey(t.date) === key &&
+    kinds.includes(t.kind)
+  );
+
+  const title = ["Income", "Expenses", "Savings"][index] + " · " + key;
+  const summary = index === 2
+    ? "Income and expense records used to calculate this month's net savings."
+    : "Transactions recorded for this category in the current month.";
+
+  healthCanvas.__dcAnimating = true;
+
+
+  try {
+    dcShow(title, summary, healthCanvas, rows);
+    await new Promise(resolve => requestAnimationFrame(resolve));
+    await dcAnimateGraphPiece(healthCanvas, index);
+  } catch (error) {
+    console.error("Graph animation error:", error);
+  } finally {
+    healthCanvas.__dcAnimating = false;
+  }
+  
+});
+
   }
 
   // Spending Overview: identify the month and the clicked bar.
