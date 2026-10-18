@@ -102,44 +102,59 @@ function ruleCategory(description, kind) {
 
 app.post("/api/insights", auth, async (req, res) => {
   const rows = Array.isArray(req.body.transactions) ? req.body.transactions.slice(0, 1500) : [];
+  const budgets = Array.isArray(req.body.budgets) ? req.body.budgets : [];
+
   const totals = rows.reduce((a, t) => {
     const amount = Math.max(0, Number(t.amount) || 0);
-    if (t.kind === "income") a.income += amount; else a.expenses += amount;
-    a.byCategory[t.category || "Other"] = (a.byCategory[t.category || "Other"] || 0) + (t.kind === "income" ? 0 : amount);
+    if (t.kind === "income") {
+      a.income += amount;
+    } else {
+      a.expenses += amount;
+      const cat = t.category || "Other";
+      a.byCategory[cat] = (a.byCategory[cat] || 0) + amount;
+    }
     return a;
   }, { income: 0, expenses: 0, byCategory: {} });
-  if (!openai) return res.json({
-    mode: "rules",
-    summary: totals.expenses > totals.income ? "Your recorded expenses are higher than your recorded income for the selected data." : "Your recorded income covers your recorded expenses in the selected data.",
-    insights: ruleInsights(totals),
-    disclaimer: "This is educational information, not financial, tax, or investment advice."
-  });
-  try {
-    const completion = await openai.chat.completions.create({
-      model: process.env.OPENAI_MODEL || "gpt-4.1-mini",
-      temperature: 0.2,
-      response_format: { type: "json_object" },
-      messages: [
-        { role: "system", content: "You are a cautious personal-finance analysis assistant. Return JSON {summary:string, insights:string[], actions:string[]}. Use only supplied aggregates; never invent facts or promise returns. Do not give tax/legal/investment advice. Avoid judgmental language. Mention data may be incomplete. Max 4 insights and 3 actions." },
-        { role: "user", content: JSON.stringify({ totals: { income: Math.round(totals.income*100)/100, expenses: Math.round(totals.expenses*100)/100, net: Math.round((totals.income-totals.expenses)*100)/100, byCategory: totals.byCategory } }) }
-      ]
-    });
-    const out = JSON.parse(completion.choices[0].message.content || "{}");
-    res.json({ mode: "ai", summary: safeText(out.summary, 500), insights: Array.isArray(out.insights) ? out.insights.slice(0,4).map(x=>safeText(x,240)) : [], actions: Array.isArray(out.actions) ? out.actions.slice(0,3).map(x=>safeText(x,240)) : [], disclaimer: "Educational information only—not financial, tax, or investment advice." });
-  } catch {
-    res.json({ mode: "rules", summary: "Here is a basic analysis of the data you provided.", insights: ruleInsights(totals), disclaimer: "Educational information only—not financial, tax, or investment advice." });
-  }
-});
-function ruleInsights(t) {
-  const sorted = Object.entries(t.byCategory).sort((a,b)=>b[1]-a[1]);
-  const out = [];
-  if (sorted[0] && sorted[0][1] > 0) out.push(`${sorted[0][0]} is your largest recorded expense category (₹${sorted[0][1].toFixed(2)}).`);
-  if (t.income > 0) out.push(`Recorded savings rate: ${((t.income-t.expenses)/t.income*100).toFixed(1)}%. This uses only imported/entered records.`);
-  if (!out.length) out.push("Add more transactions to get more useful insights.");
-  return out;
-}
 
-  
+  const insightsList = [];
+  const actionsList = [];
+
+  const sortedCategories = Object.entries(totals.byCategory).sort((a, b) => b[1] - a[1]);
+
+  if (sortedCategories.length > 0 && sortedCategories[0][1] > 0) {
+    const topCategory = sortedCategories[0][0];
+    const topAmount = sortedCategories[0][1].toFixed(2);
+
+    // Requirement 1: Highest expense category & amount
+    insightsList.push(`Most spent category: ${topCategory} (₹${topAmount})`);
+
+    // Requirement 2: Smart Budget Corner check
+    const budgetExists = budgets.some(b => 
+      (b.category || "").toLowerCase().trim() === topCategory.toLowerCase().trim()
+    );
+
+    if (!budgetExists) {
+      actionsList.push(`If you have not added this section in your smart budget corner, add it.`);
+    } else {
+      actionsList.push(`You can easily see that you have used ₹${topAmount} money in your ${topCategory} area this month. Try to reduce it to make your saving habits good.`);
+    }
+  } else {
+    insightsList.push("No recorded expenses found yet.");
+    actionsList.push("Add transactions to see personalized savings insights.");
+  }
+
+  const summaryMsg = totals.expenses > totals.income 
+    ? "Your recorded expenses are higher than your recorded income for the selected period." 
+    : "Your recorded income covers your recorded expenses in the selected period.";
+
+  res.json({
+    mode: "rules",
+    summary: summaryMsg,
+    insights: insightsList,
+    actions: actionsList,
+    disclaimer: "Educational information only—not financial, tax, or investment advice."
+  });
+});  
 app.post("/api/billing/create-subscription", auth, async (req, res) => {
   const enabled = process.env.PAYMENTS_ENABLED === "true" &&
     process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET && process.env.RAZORPAY_PLAN_ID;
