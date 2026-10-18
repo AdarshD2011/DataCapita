@@ -1226,11 +1226,45 @@ async function signUpEmail(){
 }
 async function signOut(){if(supabaseClient)await supabaseClient.auth.signOut();session=null;user=null;transactions=[];showLanding()}
 let session = null;
-async function api(path,body){
- if(!session?.access_token)throw new Error("Please sign in again.");
- const r=await fetch(path,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+session.access_token},body:JSON.stringify(body||{})});
- const d=await r.json().catch(()=>({}));
- if(!r.ok)throw new Error(d.error||"Request failed.");return d;
+
+// Isko safe function ke andar dalo taaki Supabase Client pehle load ho jaye
+async function syncSession() {
+  if (window.supabase && typeof window.supabase.auth !== 'undefined') {
+    const { data } = await window.supabase.auth.getSession();
+    session = data?.session || null;
+
+    window.supabase.auth.onAuthStateChange((_event, newSession) => {
+      session = newSession;
+    });
+  }
+}
+
+// Page load hone par safely session sync karo
+window.addEventListener("DOMContentLoaded", syncSession);
+
+async function api(path, body) {
+  // Agar session abhi sync nahi hua toh ek baar try kar lo
+  if (!session && window.supabase) {
+    const { data } = await window.supabase.auth.getSession();
+    session = data?.session || null;
+  }
+
+  if (!session?.access_token) {
+    throw new Error("Please sign in again.");
+  }
+
+  const r = await fetch(path, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer " + session.access_token
+    },
+    body: JSON.stringify(body || {})
+  });
+
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.error || "Request failed.");
+  return d;
 }
 async function checkHealth(){
  try{const r=await fetch("/api/health");const d=await r.json();const ok=d.services?.database;
