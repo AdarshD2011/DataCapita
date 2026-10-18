@@ -3136,4 +3136,257 @@ init();
   </div>
 </div>
 
+<!-- DataCapita Graph Explorer -->
+<div id="dcGraphModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="dcGraphTitle">
+  <div class="modal" style="width:min(1000px,96vw);max-height:90vh;overflow:auto">
+    <button type="button" class="close" onclick="dcCloseGraph()">Close ×</button>
+    <h2 id="dcGraphTitle">Graph Explorer</h2>
+    <p id="dcGraphSummary">Select a graph section to inspect its transactions.</p>
+    <div style="height:320px;min-height:240px;background:#f8f9ff;border:1px solid #e7eaf5;border-radius:12px;padding:10px">
+      <canvas id="dcGraphLarge" style="width:100%;height:100%;display:block"></canvas>
+    </div>
+    <h3 style="margin:22px 0 10px;font-size:15px">Related Transactions</h3>
+    <div id="dcGraphTransactions" style="overflow-x:auto"></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const $dc = id => document.getElementById(id);
+
+  function dcMoney(value) {
+    return "₹" + Number(value || 0).toLocaleString("en-IN", {
+      maximumFractionDigits: 2
+    });
+  }
+
+  function dcSafeText(value) {
+    return String(value ?? "");
+  }
+
+  function dcDrawLarge(source) {
+    const target = $dc("dcGraphLarge");
+    if (!target || !source) return;
+
+    const box = target.getBoundingClientRect();
+    if (box.width < 10 || box.height < 10) return;
+
+    const dpr = window.devicePixelRatio || 1;
+    target.width = Math.round(box.width * dpr);
+    target.height = Math.round(box.height * dpr);
+
+    const ctx = target.getContext("2d");
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, box.width, box.height);
+    ctx.drawImage(source, 0, 0, box.width, box.height);
+  }
+
+  function dcShow(title, summary, sourceCanvas, rows) {
+    const modal = $dc("dcGraphModal");
+    const heading = $dc("dcGraphTitle");
+    const summaryEl = $dc("dcGraphSummary");
+    const list = $dc("dcGraphTransactions");
+
+    if (!modal || !heading || !summaryEl || !list) return;
+
+    heading.textContent = title;
+    summaryEl.textContent = summary;
+    list.replaceChildren();
+
+    if (!rows.length) {
+      const empty = document.createElement("p");
+      empty.className = "empty";
+      empty.textContent = "No matching transactions were found for this selection.";
+      list.appendChild(empty);
+    } else {
+      const table = document.createElement("table");
+      table.style.minWidth = "650px";
+
+      const thead = document.createElement("thead");
+      const headerRow = document.createElement("tr");
+
+      ["Date", "Description", "Category", "Type", "Amount"].forEach(label => {
+        const th = document.createElement("th");
+        th.textContent = label;
+        headerRow.appendChild(th);
+      });
+
+      thead.appendChild(headerRow);
+      table.appendChild(thead);
+
+      const tbody = document.createElement("tbody");
+
+      rows.forEach(t => {
+        const tr = document.createElement("tr");
+        const values = [
+          t.date,
+          t.description || t.merchant || "Transaction",
+          t.category || "Other",
+          t.kind,
+          dcMoney(t.amount)
+        ];
+
+        values.forEach((value, index) => {
+          const td = document.createElement("td");
+          td.textContent = dcSafeText(value);
+          if (index === 4) td.style.fontWeight = "800";
+          tr.appendChild(td);
+        });
+
+        tbody.appendChild(tr);
+      });
+
+      table.appendChild(tbody);
+      list.appendChild(table);
+    }
+
+    modal.classList.remove("hidden");
+    document.body.style.overflow = "hidden";
+
+    requestAnimationFrame(() => dcDrawLarge(sourceCanvas));
+  }
+
+  window.dcCloseGraph = function () {
+    const modal = $dc("dcGraphModal");
+    if (modal) modal.classList.add("hidden");
+    document.body.style.overflow = "";
+  };
+
+  $dc("dcGraphModal").addEventListener("click", event => {
+    if (event.target === $dc("dcGraphModal")) window.dcCloseGraph();
+  });
+
+  document.addEventListener("keydown", event => {
+    if (event.key === "Escape") window.dcCloseGraph();
+  });
+
+  // Financial Health: click a graph section to see matching records.
+  const healthCanvas = $dc("fhpHealthCanvas");
+
+  if (healthCanvas) {
+    healthCanvas.addEventListener("click", event => {
+      if (typeof window.drawFinancialHealthGraph !== "function") return;
+
+      if (typeof healthCanvas.onmousemove === "function") {
+        healthCanvas.onmousemove(event);
+      }
+
+      const index = healthCanvas.__fhpHover;
+      if (index !== 0 && index !== 1 && index !== 2) {
+        dcShow(
+          "Financial Health Graph",
+          "Choose a visible Income, Expenses or Savings section.",
+          healthCanvas,
+          []
+        );
+        return;
+      }
+
+      const key = typeof currentMonth === "function" ? currentMonth() : "";
+      const kinds = index === 0 ? ["income"] :
+                    index === 1 ? ["expense"] : ["income", "expense"];
+
+      const rows = (window.transactions || transactions || []).filter(t =>
+        monthKey(t.date) === key && kinds.includes(t.kind)
+      );
+
+      const title = ["Income", "Expenses", "Savings"][index] + " · " + key;
+      const summary = index === 2
+        ? "Income and expense records used to calculate this month's net savings."
+        : "Transactions recorded for this category in the current month.";
+
+      dcShow(title, summary, healthCanvas, rows);
+    });
+  }
+
+  // Spending Overview: identify the month and the clicked bar.
+  const spendingCanvas = $dc("spendChart");
+
+  if (spendingCanvas) {
+    spendingCanvas.style.cursor = "pointer";
+
+    spendingCanvas.addEventListener("click", event => {
+      if (typeof monthlyData !== "function") return;
+
+      const rect = spendingCanvas.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+
+      const count = Number($dc("chartRange")?.value) || 6;
+      const data = monthlyData(count);
+
+      const width = rect.width;
+      const height = rect.height;
+      const pad = { l: 43, r: 10, t: 14, b: 28 };
+      const slot = (width - pad.l - pad.r) / data.length;
+      const index = Math.floor((x - pad.l) / slot);
+
+      if (index < 0 || index >= data.length) {
+        dcShow("Spending Overview", "Click a month bar to inspect its transactions.", spendingCanvas, []);
+        return;
+      }
+
+      const month = data[index];
+      const center = pad.l + slot * index + slot / 2;
+      const expenseCenter = center - 11;
+      const incomeCenter = center + 11;
+      const base = height - pad.b;
+
+      const max = Math.max(
+        1,
+        ...data.map(item => Math.max(item.expense, item.income))
+      ) * 1.15;
+
+      const plotHeight = height - pad.t - pad.b;
+      const expenseTop = base - month.expense / max * plotHeight;
+      const incomeTop = base - month.income / max * plotHeight;
+
+      let kind;
+
+      if (Math.abs(x - expenseCenter) <= Math.abs(x - incomeCenter)) {
+        kind = "expense";
+      } else {
+        kind = "income";
+      }
+
+      const barTop = kind === "expense" ? expenseTop : incomeTop;
+      const amount = kind === "expense" ? month.expense : month.income;
+
+      if (y < barTop || y > base || amount <= 0) {
+        dcShow(
+          month.label + " · " + month.key,
+          "Click directly on a visible income or expense bar.",
+          spendingCanvas,
+          []
+        );
+        return;
+      }
+
+      const rows = (window.transactions || transactions || []).filter(t =>
+        monthKey(t.date) === month.key && t.kind === kind
+      );
+
+      dcShow(
+        (kind === "expense" ? "Expenses" : "Income") + " · " + month.key,
+        rows.length + " matching records · Total " + dcMoney(amount),
+        spendingCanvas,
+        rows
+      );
+    });
+  }
+
+  window.addEventListener("resize", () => {
+    const modal = $dc("dcGraphModal");
+    if (!modal || modal.classList.contains("hidden")) return;
+
+    const source = $dc("dcGraphTitle")?.textContent?.startsWith("Financial Health")
+      ? healthCanvas
+      : spendingCanvas;
+
+    if (source) dcDrawLarge(source);
+  });
+})();
+</script>
+</body></html>
+
 </body></html>
