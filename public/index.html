@@ -2,7 +2,7 @@
 <html lang="en">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <head>
-<link rel="icon" type="image/png" href="/dc.png">
+<link rel="icon" type="image/png" href="/DataCapita.jpeg">
 <script>
   window.ENV = {
     SUPABASE_URL: "https://cdzgyvrvmbnkspqayqtc.supabase.co",
@@ -1601,9 +1601,39 @@ loadSavingsGoals();
 $("txForm").addEventListener("submit",async e=>{
  e.preventDefault();if(!supabaseClient||!user){toast("Cloud database is not configured.");return}
  const row={user_id:user.id,transaction_date:$("date").value,description:$("desc").value.trim(),merchant:$("desc").value.trim(),amount:Number($("amount").value),kind:$("kind").value,category:$("category").value,source:"manual"};
- if(!row.description||!row.transaction_date||!(row.amount>0)){toast("Check description, date and amount.");return}
+
+if(!row.description||!row.transaction_date||!(row.amount>0)){toast("Check description, date and amount.");return}
  try{
-  if(row.category==="Other"){try{const c=await api("/api/classify",{description:row.description,amount:row.amount,kind:row.kind});row.category=c.category}catch{}}
+  const text = row.description.toLowerCase();
+alert("DEBUG: " + row.description + " | Type: " + row.kind + " | Category: " + row.category);
+  if(/\b(salary|payroll|salary credit|monthly pay)\b/i.test(text)){
+    row.kind = "income";
+    row.category = "Salary";
+    $("kind").value = "income";
+    $("category").value = "Salary";
+  } else if(/\b(freelance|freelancing|client payment|consulting fee)\b/i.test(text)){
+    row.kind = "income";
+    row.category = "Freelance";
+    $("kind").value = "income";
+    $("category").value = "Freelance";
+  } else if(/\b(interest credit|dividend|investment income)\b/i.test(text)){
+    row.kind = "income";
+    row.category = "Investment";
+    $("kind").value = "income";
+    $("category").value = "Investment";
+  } else if(row.category==="Other"){
+    try{
+      const c=await api("/api/classify",{
+        description:row.description,
+        amount:row.amount,
+        kind:row.kind
+      });
+      if(c.category) row.category=c.category;
+    }catch{
+      row.category=localCategory(row.description,row.kind)||"Other";
+    }
+  }
+
   const {error}=await supabaseClient.from("transactions").insert(row);if(error)throw error;
   $("txForm").reset();$("date").value=today();$("categoryHint").textContent="";await loadTransactions();toast("Transaction saved securely to your account.");
  }catch(err){toast(err.message||"Could not save transaction.")}
