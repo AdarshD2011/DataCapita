@@ -1199,6 +1199,14 @@ body:not(.chat-finance-mode) .premium-lock { background: linear-gradient(145deg,
     <button data-page="insights"><span class="ico">✧</span>Insights & savings <span class="ai-badge">PRO</span></button>
     <button data-page="chat-finance"><span class="ico">✦</span>Chat DataCapita Finance Manager</button> 
  </nav></div>
+  <div style="margin-top:-12px">
+    <button type="button" id="dcSidebarSupport"
+      aria-controls="dcSupportLinks" aria-expanded="false"
+      style="width:100%;display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid #dbe5f2;border-radius:10px;background:#f8fafc;color:#28334a;text-align:left;font:inherit;cursor:pointer">
+      <span style="font-size:19px;color:#0d9488">✉</span>
+      <span style="font-size:13px;font-weight:700">Contact &amp; Support</span>
+    </button>
+  </div>
   <div class="premium-card"><div style="font-weight:800;font-size:13px">Unlock your money view</div><p>Forecast trends and explore deeper spending insights.</p><button onclick="goPage('premium')">Premium · Coming later</button></div>
   <div class="user-line"><div class="avatar" id="sideAvatar">DC</div><div style="min-width:0;flex:1"><b id="sideName" style="display:block;color:#28334a;overflow:hidden;text-overflow:ellipsis">Your account</b><span id="sidePlan" class="eyebrow">Free plan</span></div><button class="btn secondary" style="padding:7px" onclick="signOut()" title="Sign out">↪</button></div>
 </aside>
@@ -4217,6 +4225,21 @@ healthCanvas.addEventListener("click", async event => {
       : spendingCanvas;
 
     if (source) dcDrawLarge(source);
+  });
+})();
+</script>
+<script>
+(() => {
+  const sidebarButton = document.getElementById("dcSidebarSupport");
+  const originalButton = document.getElementById("dcSupportToggle");
+  const links = document.getElementById("dcSupportLinks");
+  if (!sidebarButton || !originalButton || !links) return;
+  sidebarButton.addEventListener("click", () => {
+    const isOpen = !links.classList.contains("hidden");
+    originalButton.click();
+    if (!isOpen) {
+      document.getElementById("dcContactSupport")?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
   });
 })();
 </script>
