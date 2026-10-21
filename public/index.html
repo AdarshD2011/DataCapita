@@ -1506,6 +1506,18 @@ async function enterApp() {
   try {
     await api("/api/profile/ensure", {});
     await loadTransactions();
+
+    if (new URLSearchParams(location.search).get("openBudget") === "1") {
+      goPage("insights", false);
+      history.replaceState({ page: "insights" }, "", "#insights");
+
+      setTimeout(() => {
+        const panel = document.getElementById("smartBudget");
+        if (panel) {
+          panel.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }, 500);
+    }
   } catch (e) {
     toast(e.message);
   }
