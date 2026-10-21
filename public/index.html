@@ -1201,11 +1201,19 @@ body:not(.chat-finance-mode) .premium-lock { background: linear-gradient(145deg,
  </nav></div>
   <div style="margin-top:-12px">
     <button type="button" id="dcSidebarSupport"
-      aria-controls="dcSupportLinks" aria-expanded="false"
+      aria-controls="dcSidebarSupportLinks" aria-expanded="false"
       style="width:100%;display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid #dbe5f2;border-radius:10px;background:#f8fafc;color:#28334a;text-align:left;font:inherit;cursor:pointer">
       <span style="font-size:19px;color:#0d9488">✉</span>
       <span style="font-size:13px;font-weight:700">Contact &amp; Support</span>
     </button>
+
+    <div id="dcSidebarSupportLinks" hidden
+      style="display:none;margin-top:8px;padding:10px;background:#fff;border:1px solid #dbe5f2;border-radius:10px;gap:8px">
+      <a href="https://mail.google.com/mail/?view=cm&amp;fs=1&amp;to=datacapitasupport@gmail.com" target="_blank" rel="noopener noreferrer" style="display:block;padding:9px;color:#28334a;text-decoration:none;font-size:13px">✉ Gmail Support</a>
+      <a href="https://www.youtube.com/@DataCapita_Official" target="_blank" rel="noopener noreferrer" style="display:block;padding:9px;color:#28334a;text-decoration:none;font-size:13px">▶ YouTube</a>
+      <a href="https://www.instagram.com/datacapita_official/" target="_blank" rel="noopener noreferrer" style="display:block;padding:9px;color:#28334a;text-decoration:none;font-size:13px">◎ Instagram</a>
+      <a href="https://www.linkedin.com/in/data-capita-699655445" target="_blank" rel="noopener noreferrer" style="display:block;padding:9px;color:#28334a;text-decoration:none;font-size:13px">in LinkedIn</a>
+    </div>
   </div>
   <div class="premium-card"><div style="font-weight:800;font-size:13px">Unlock your money view</div><p>Forecast trends and explore deeper spending insights.</p><button onclick="goPage('premium')">Premium · Coming later</button></div>
   <div class="user-line"><div class="avatar" id="sideAvatar">DC</div><div style="min-width:0;flex:1"><b id="sideName" style="display:block;color:#28334a;overflow:hidden;text-overflow:ellipsis">Your account</b><span id="sidePlan" class="eyebrow">Free plan</span></div><button class="btn secondary" style="padding:7px" onclick="signOut()" title="Sign out">↪</button></div>
@@ -4230,24 +4238,16 @@ healthCanvas.addEventListener("click", async event => {
 </script>
 <script>
 (() => {
-  const sidebarButton = document.getElementById("dcSidebarSupport");
-  const originalButton = document.getElementById("dcSupportToggle");
-  const links = document.getElementById("dcSupportLinks");
-  if (!sidebarButton || !originalButton || !links) return;
+  const button = document.getElementById("dcSidebarSupport");
+  const panel = document.getElementById("dcSidebarSupportLinks");
 
-  sidebarButton.addEventListener("click", () => {
-    const opening = links.hidden;
-    links.hidden = !opening;
-    links.style.display = opening ? "grid" : "none";
-    originalButton.setAttribute("aria-expanded", String(opening));
-    sidebarButton.setAttribute("aria-expanded", String(opening));
+  if (!button || !panel) return;
 
-    if (opening) {
-      document.getElementById("dcContactSupport")?.scrollIntoView({
-        behavior: "smooth",
-        block: "center"
-      });
-    }
+  button.addEventListener("click", () => {
+    const opening = panel.hidden;
+    panel.hidden = !opening;
+    panel.style.display = opening ? "grid" : "none";
+    button.setAttribute("aria-expanded", String(opening));
   });
 })();
 </script>
