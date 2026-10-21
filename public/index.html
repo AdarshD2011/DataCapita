@@ -4251,4 +4251,98 @@ healthCanvas.addEventListener("click", async event => {
   });
 })();
 </script>
+
+<style id="dcWelcomeStyles">
+  #dcWelcomeOverlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000000;
+    background: #070b18;
+    opacity: 1;
+    visibility: visible;
+    transition: opacity .75s ease, visibility .75s ease;
+  }
+  #dcWelcomeOverlay.dc-welcome-exit {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+  #dcWelcomeVideo {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    background: #070b18;
+  }
+  .dc-welcome-control {
+    position: absolute;
+    z-index: 2;
+    bottom: max(22px, env(safe-area-inset-bottom));
+    padding: 11px 17px;
+    border: 1px solid #ffffff55;
+    border-radius: 999px;
+    color: #fff;
+    background: #10172dcc;
+    backdrop-filter: blur(12px);
+    font: 600 13px system-ui, sans-serif;
+  }
+  #dcWelcomeSound { left: 20px; }
+  #dcWelcomeSkip { right: 20px; }
+  @media (prefers-reduced-motion: reduce) {
+    #dcWelcomeOverlay { transition: none; }
+  }
+</style>
+
+<div id="dcWelcomeOverlay" role="dialog" aria-label="DataCapita welcome video">
+  <video id="dcWelcomeVideo" autoplay muted playsinline preload="auto">
+    <source src="/welcome.mp4" type="video/mp4">
+  </video>
+  <button id="dcWelcomeSkip" class="dc-welcome-control" type="button">Skip intro →</button>
+</div>
+<script id="dcWelcomeScript">
+(() => {
+  const KEY = "datacapita_welcome_seen_v1";
+  const overlay = document.getElementById("dcWelcomeOverlay");
+  const video = document.getElementById("dcWelcomeVideo");
+  const skip = document.getElementById("dcWelcomeSkip");
+
+  if (!overlay || !video || !skip) return;
+
+  let finished = false;
+
+  function finishWelcome() {
+    if (finished) return;
+    finished = true;
+
+    try {
+      localStorage.setItem(KEY, "1");
+    } catch (_) {}
+
+    overlay.classList.add("dc-welcome-exit");
+
+    window.setTimeout(() => {
+      overlay.remove();
+
+      if (typeof window.openAuth === "function") {
+        window.openAuth();
+      }
+    }, 750);
+  }
+
+  if (localStorage.getItem(KEY) === "1") {
+    overlay.remove();
+    return;
+  }
+
+  video.addEventListener("ended", finishWelcome, { once: true });
+  video.addEventListener("error", finishWelcome, { once: true });
+  skip.addEventListener("click", finishWelcome);
+
+  video.muted = true;
+  const playAttempt = video.play();
+  if (playAttempt && typeof playAttempt.catch === "function") {
+    playAttempt.catch(() => {});
+  }
+})();
+</script>
 </body></html>
