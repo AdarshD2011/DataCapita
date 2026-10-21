@@ -1109,6 +1109,52 @@ body:not(.chat-finance-mode) .premium-lock { background: linear-gradient(145deg,
   </section>
   <div class="feature-row"><div class="feature"><div class="metric-icon">↗</div><h3>One simple dashboard</h3><p>See income, spending, estimated savings and recent activity in one place.</p></div><div class="feature"><div class="metric-icon">✦</div><h3>AI-assisted insights</h3><p>Classify transactions and summarize spending patterns, with a rules-based fallback.</p></div><div class="feature"><div class="metric-icon">▤</div><h3>Bring your data</h3><p>Import CSV or text-based PDF statements, review the parsed rows, then save them.</p></div></div>
   <div style="text-align:center;color:#8b95a7;font-size:11px;padding:20px">DataCapita · Educational finance tools, not financial or tax advice.</div>
+
+  <div id="dcContactSupport" style="text-align:center;padding:10px 16px 24px">
+    <button type="button" id="dcSupportToggle" aria-expanded="false"
+      style="padding:12px 22px;border:1px solid #60a5fa;border-radius:12px;background:linear-gradient(110deg,#2563eb,#0d9488);color:white;font-weight:800;cursor:pointer;box-shadow:0 6px 22px #2563eb33">
+      Contact &amp; Support
+    </button>
+
+    <div id="dcSupportLinks" hidden
+      style="margin-top:14px;justify-content:center;gap:12px;flex-wrap:wrap">
+      <a href="https://www.youtube.com/@DataCapita_Official"
+        target="_blank" rel="noopener noreferrer"
+        style="display:inline-block;padding:10px 14px;border:1px solid #334155;border-radius:9px;color:inherit;text-decoration:none">
+        YouTube Channel
+      </a>
+
+      <a id="dcSupportEmail" href="#"
+        target="_blank" rel="noopener noreferrer"
+        style="display:inline-block;padding:10px 14px;border:1px solid #334155;border-radius:9px;color:inherit;text-decoration:none">
+        Email Support
+      </a>
+    </div>
+  </div>
+
+  <script>
+  (function () {
+    const button = document.getElementById("dcSupportToggle");
+    const links = document.getElementById("dcSupportLinks");
+    const email = document.getElementById("dcSupportEmail");
+
+    if (!button || !links || !email) return;
+
+    email.href =
+      "https://mail.google.com/mail/?view=cm" +
+      String.fromCharCode(38) +
+      "fs=1" +
+      String.fromCharCode(38) +
+      "to=datacapitasupport@gmail.com";
+
+    button.addEventListener("click", function () {
+      const opening = links.hidden;
+      links.hidden = !opening;
+      links.style.display = opening ? "flex" : "none";
+      button.setAttribute("aria-expanded", String(opening));
+    });
+  })();
+  </script>
 </div>
 
 <div id="app" class="app hidden">
