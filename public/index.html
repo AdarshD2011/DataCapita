@@ -4234,11 +4234,19 @@ healthCanvas.addEventListener("click", async event => {
   const originalButton = document.getElementById("dcSupportToggle");
   const links = document.getElementById("dcSupportLinks");
   if (!sidebarButton || !originalButton || !links) return;
+
   sidebarButton.addEventListener("click", () => {
-    const isOpen = !links.classList.contains("hidden");
-    originalButton.click();
-    if (!isOpen) {
-      document.getElementById("dcContactSupport")?.scrollIntoView({ behavior: "smooth", block: "center" });
+    const opening = links.hidden;
+    links.hidden = !opening;
+    links.style.display = opening ? "grid" : "none";
+    originalButton.setAttribute("aria-expanded", String(opening));
+    sidebarButton.setAttribute("aria-expanded", String(opening));
+
+    if (opening) {
+      document.getElementById("dcContactSupport")?.scrollIntoView({
+        behavior: "smooth",
+        block: "center"
+      });
     }
   });
 })();
