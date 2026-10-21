@@ -877,8 +877,79 @@ function localAnswer(question) {
   return `I can analyze your imported transactions locally without adding an AI API.\n\nTry asking:\n• "Summarize my statement"\n• "Where did my money come from?"\n• "Where did my money go?"\n• "What should I do next?"\n• "Find recurring payments"\n• "Check for duplicates"\n\nTransactions loaded: ${tx.length}`;
 }
 
+
+function renderSpendingGraph() {
+  const tx = state.transactions || [];
+  const groups = new Map();
+
+  tx.forEach(t => {
+    const amount = Number(t.amount);
+    const type = String(t.type || "").toLowerCase();
+    if (!Number.isFinite(amount) || amount === 0) return;
+    if (!(amount < 0 || ["debit","expense","withdrawal"].includes(type))) return;
+
+    const category = String(t.category || "Other");
+    const item = groups.get(category) || { amount: 0, count: 0 };
+    item.amount += Math.abs(amount);
+    item.count++;
+    groups.set(category, item);
+  });
+
+  const data = [...groups.entries()].sort((a,b) => b[1].amount - a[1].amount).slice(0,7);
+  const total = data.reduce((sum,x) => sum + x[1].amount, 0);
+  const box = document.createElement("div");
+  box.className = "bubble assistant";
+  box.style.cssText = "width:100%;box-sizing:border-box;padding:20px;border-radius:16px;background:linear-gradient(145deg,#101b31,#17263a);color:#edf5ff;border:1px solid #31527a";
+
+  const title = document.createElement("h3");
+  title.textContent = "YOUR SPENDING BREAKDOWN";
+  box.appendChild(title);
+
+  if (!data.length || total <= 0) {
+    const msg = document.createElement("p");
+    msg.textContent = "No debit transactions found. Check your imported transaction amounts and types.";
+    box.appendChild(msg);
+  } else {
+    const sum = document.createElement("p");
+    sum.textContent = "Top 7 categories total: " + total.toLocaleString("en-IN",{style:"currency",currency:"INR"});
+    box.appendChild(sum);
+
+    data.forEach(([category,item],i) => {
+      const row = document.createElement("div");
+      row.style.cssText = "margin:14px 0;padding:10px;border-radius:10px;background:#1c2b40";
+
+      const label = document.createElement("div");
+      label.textContent = (i+1) + ". " + category + " — " + item.amount.toLocaleString("en-IN",{style:"currency",currency:"INR"}) + " (" + item.count + " transactions)";
+      label.style.cssText = "font-size:12px;margin-bottom:8px;overflow-wrap:anywhere";
+
+      const track = document.createElement("div");
+      track.style.cssText = "height:10px;border-radius:12px;background:#34445a;overflow:hidden";
+
+      const bar = document.createElement("div");
+      bar.style.cssText = "height:100%;width:" + (item.amount/total*100) + "%;background:linear-gradient(90deg,#3b82f6,#2dd4bf);border-radius:12px";
+      track.appendChild(bar);
+      row.append(label,track);
+      box.appendChild(row);
+    });
+
+    const advice = document.createElement("p");
+    advice.textContent = "Next month: set realistic category limits, prioritise essential bills, and review spending weekly.";
+    box.appendChild(advice);
+
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = "Use Smart Budget →";
+    button.style.cssText = "width:100%;padding:12px;border:0;border-radius:10px;background:linear-gradient(100deg,#2563eb,#0d9488);color:white;font-weight:bold;cursor:pointer";
+    button.onclick = () => { window.location.href = "/?openBudget=1#dashboard"; };
+    box.appendChild(button);
+  }
+
+  $("#chatBox").appendChild(box);
+  $("#chatBox").scrollTop = $("#chatBox").scrollHeight;
+}
+
 function addBubble(text,who){const d=document.createElement("div");d.className="bubble "+who;d.textContent=text;$("#chatBox").appendChild(d);$("#chatBox").scrollTop=$("#chatBox").scrollHeight}
-async function sendChat(){let q=$("#chatInput").value.trim();if(!q)return;$("#chatInput").value="";addBubble(q,"user");let answer;try{const res=await fetch("/api/ask",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({question:q,summary:`Files: ${state.files.map(f=>f.name).join(", ")}; ${state.transactions.length} transaction rows.`,transactions:state.transactions.slice(0,150)})});if(res.ok){const d=await res.json();answer=d.answer}else answer=localAnswer(q)}catch(e){answer=localAnswer(q)}addBubble(answer,"assistant")}
+async function sendChat(){let q=$("#chatInput").value.trim();if(!q)return;$("#chatInput").value="";addBubble(q,"user");let answer;try{const res=await fetch("/api/ask",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({question:q,summary:`Files: ${state.files.map(f=>f.name).join(", ")}; ${state.transactions.length} transaction rows.`,transactions:state.transactions.slice(0,150)})});if(res.ok){const d=await res.json();answer=d.answer}else answer=localAnswer(q)}catch(e){answer=localAnswer(q)}if(/biggest|spending categor|expense categor|where.*money.*(went|go)|money.*spent/i.test(q)&&state.transactions.length){renderSpendingGraph()}else{addBubble(answer,"assistant")}}
 $("#sendChat").onclick=sendChat;$("#chatInput").addEventListener("keydown",e=>{if(e.key==="Enter")sendChat()});$$(".quick").forEach(b=>b.onclick=()=>{$("#chatInput").value=b.dataset.prompt;sendChat()});
 fetch("/api/health").then(r=>r.json()).then(d=>{$("#aiState").textContent=d.aiConfigured?"CONFIGURED":"OPTIONAL / OFF";$("#aiState").className="tag "+(d.aiConfigured?"":"warn")}).catch(()=>{$("#aiState").textContent="LOCAL MODE";$("#aiState").className="tag warn"});
 renderAll();
