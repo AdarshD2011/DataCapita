@@ -1110,51 +1110,82 @@ body:not(.chat-finance-mode) .premium-lock { background: linear-gradient(145deg,
   <div class="feature-row"><div class="feature"><div class="metric-icon">↗</div><h3>One simple dashboard</h3><p>See income, spending, estimated savings and recent activity in one place.</p></div><div class="feature"><div class="metric-icon">✦</div><h3>AI-assisted insights</h3><p>Classify transactions and summarize spending patterns, with a rules-based fallback.</p></div><div class="feature"><div class="metric-icon">▤</div><h3>Bring your data</h3><p>Import CSV or text-based PDF statements, review the parsed rows, then save them.</p></div></div>
   <div style="text-align:center;color:#8b95a7;font-size:11px;padding:20px">DataCapita · Educational finance tools, not financial or tax advice.</div>
 
-  <div id="dcContactSupport" style="text-align:center;padding:10px 16px 24px">
-    <button type="button" id="dcSupportToggle" aria-expanded="false"
-      style="padding:12px 22px;border:1px solid #60a5fa;border-radius:12px;background:linear-gradient(110deg,#2563eb,#0d9488);color:white;font-weight:800;cursor:pointer;box-shadow:0 6px 22px #2563eb33">
-      Contact &amp; Support
-    </button>
 
-    <div id="dcSupportLinks" hidden
-      style="margin-top:14px;justify-content:center;gap:12px;flex-wrap:wrap">
-      <a href="https://www.youtube.com/@DataCapita_Official"
-        target="_blank" rel="noopener noreferrer"
-        style="display:inline-block;padding:10px 14px;border:1px solid #334155;border-radius:9px;color:inherit;text-decoration:none">
-        YouTube Channel
-      </a>
+<div id="dcContactSupport" style="text-align:center;padding:12px 16px 26px">
+  <button type="button" id="dcSupportToggle" aria-expanded="false"
+    style="padding:12px 24px;border:1px solid #60a5fa;border-radius:12px;background:linear-gradient(110deg,#2563eb,#0d9488);color:#fff;font-size:14px;font-weight:800;cursor:pointer;box-shadow:0 6px 22px #2563eb33">
+    Contact &amp; Support
+  </button>
 
-      <a id="dcSupportEmail" href="#"
-        target="_blank" rel="noopener noreferrer"
-        style="display:inline-block;padding:10px 14px;border:1px solid #334155;border-radius:9px;color:inherit;text-decoration:none">
-        Email Support
-      </a>
-    </div>
+  <div id="dcSupportLinks" hidden
+    style="margin:16px auto 0;max-width:360px;display:none;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px">
+
+    <a href="https://mail.google.com/mail/?view=cm&amp;fs=1&amp;to=datacapitasupport@gmail.com"
+      target="_blank" rel="noopener noreferrer"
+      style="display:flex;align-items:center;gap:10px;padding:12px;border:1px solid #334155;border-radius:12px;background:#ffffff08;color:inherit;text-decoration:none;text-align:left">
+      <svg width="26" height="26" viewBox="0 0 48 48" aria-hidden="true">
+        <path fill="#4285F4" d="M6 36V14l6 4v18z"/>
+        <path fill="#34A853" d="M36 18l6-4v22h-6z"/>
+        <path fill="#EA4335" d="M6 14l6-4 12 9 12-9 6 4-18 14z"/>
+        <path fill="#C5221F" d="M6 14l6 4v18H6z"/>
+        <path fill="#FBBC04" d="M36 18l6-4v22h-6z"/>
+        <path fill="#4285F4" d="M36 18l6-4v22h-6z"/>
+      </svg>
+      <span><strong style="display:block;font-size:13px">Gmail</strong><small style="opacity:.7">Email Support</small></span>
+    </a>
+
+    <a href="https://www.youtube.com/@DataCapita_Official"
+      target="_blank" rel="noopener noreferrer"
+      style="display:flex;align-items:center;gap:10px;padding:12px;border:1px solid #334155;border-radius:12px;background:#ffffff08;color:inherit;text-decoration:none;text-align:left">
+      <svg width="26" height="26" viewBox="0 0 48 48" aria-hidden="true">
+        <rect x="3" y="9" width="42" height="30" rx="9" fill="#FF0033"/>
+        <path d="M20 16l13 8-13 8z" fill="#fff"/>
+      </svg>
+      <span><strong style="display:block;font-size:13px">YouTube</strong><small style="opacity:.7">Official Channel</small></span>
+    </a>
+
+    <a href="https://www.instagram.com/datacapita_official/"
+      target="_blank" rel="noopener noreferrer"
+      style="display:flex;align-items:center;gap:10px;padding:12px;border:1px solid #334155;border-radius:12px;background:#ffffff08;color:inherit;text-decoration:none;text-align:left">
+      <svg width="26" height="26" viewBox="0 0 48 48" aria-hidden="true">
+        <defs><linearGradient id="dcInstaGradient" x1="0" y1="1" x2="1" y2="0"><stop stop-color="#FFB900"/><stop offset=".5" stop-color="#FF0069"/><stop offset="1" stop-color="#7638FA"/></linearGradient></defs>
+        <rect x="4" y="4" width="40" height="40" rx="12" fill="url(#dcInstaGradient)"/>
+        <rect x="13" y="13" width="22" height="22" rx="7" fill="none" stroke="#fff" stroke-width="3"/>
+        <circle cx="24" cy="24" r="5" fill="none" stroke="#fff" stroke-width="3"/>
+        <circle cx="32" cy="16" r="2" fill="#fff"/>
+      </svg>
+      <span><strong style="display:block;font-size:13px">Instagram</strong><small style="opacity:.7">Official Profile</small></span>
+    </a>
+
+    <a href="https://www.linkedin.com/in/data-capita-699655445"
+      target="_blank" rel="noopener noreferrer"
+      style="display:flex;align-items:center;gap:10px;padding:12px;border:1px solid #334155;border-radius:12px;background:#ffffff08;color:inherit;text-decoration:none;text-align:left">
+      <svg width="26" height="26" viewBox="0 0 48 48" aria-hidden="true">
+        <rect x="3" y="3" width="42" height="42" rx="7" fill="#0A66C2"/>
+        <circle cx="14" cy="16" r="3" fill="#fff"/>
+        <path fill="#fff" d="M11 21h6v16h-6zm10 0h6v2.3c1.4-2 3.2-2.8 5.6-2.8 5 0 6.4 3.3 6.4 8V37h-6v-7.5c0-2.2-.1-4-2.7-4s-3.3 2-3.3 4V37h-6z"/>
+      </svg>
+      <span><strong style="display:block;font-size:13px">LinkedIn</strong><small style="opacity:.7">Official Profile</small></span>
+    </a>
+
   </div>
+</div>
 
-  <script>
-  (function () {
-    const button = document.getElementById("dcSupportToggle");
-    const links = document.getElementById("dcSupportLinks");
-    const email = document.getElementById("dcSupportEmail");
+<script>
+(function () {
+  const button = document.getElementById("dcSupportToggle");
+  const links = document.getElementById("dcSupportLinks");
 
-    if (!button || !links || !email) return;
+  if (!button || !links) return;
 
-    email.href =
-      "https://mail.google.com/mail/?view=cm" +
-      String.fromCharCode(38) +
-      "fs=1" +
-      String.fromCharCode(38) +
-      "to=datacapitasupport@gmail.com";
-
-    button.addEventListener("click", function () {
-      const opening = links.hidden;
-      links.hidden = !opening;
-      links.style.display = opening ? "flex" : "none";
-      button.setAttribute("aria-expanded", String(opening));
-    });
-  })();
-  </script>
+  button.addEventListener("click", function () {
+    const opening = links.hidden;
+    links.hidden = !opening;
+    links.style.display = opening ? "grid" : "none";
+    button.setAttribute("aria-expanded", String(opening));
+  });
+})();
+</script>
 </div>
 
 <div id="app" class="app hidden">
@@ -4189,6 +4220,4 @@ healthCanvas.addEventListener("click", async event => {
   });
 })();
 </script>
-</body></html>
-
 </body></html>
