@@ -684,8 +684,196 @@ function renderAll(){let tx=state.transactions,credits=tx.filter(t=>t.amount>0),
 function exportCSV(){if(!state.transactions.length){alert("Import transaction data first.");return}let cols=["date","description","amount","type","category","balance","source"],lines=[cols.join(",")];for(const t of state.transactions){lines.push(cols.map(k=>`"${String(t[k]??"").replace(/"/g,'""')}"`).join(","))}let blob=new Blob(["\ufeff"+lines.join("\r\n")],{type:"text/csv;charset=utf-8;"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="datacapita-transactions.csv";a.click();URL.revokeObjectURL(url)}
 $("#exportCsv").onclick=exportCSV;$("#exportCsv2").onclick=exportCSV;
 function clearData(){if(!confirm("Clear all imported files and transaction rows from this session?"))return;state.transactions=[];state.files=[];renderAll();$("#uploadStatus").textContent="All session data cleared."}
-$("#clearFiles").onclick=clearData;$("#clearAll").onclick=clearData;
-function localAnswer(question){let q=question.toLowerCase(),tx=state.transactions;if(!tx.length)return"Please import a bank statement first. I can then summarize the recognized transactions. If a PDF does not parse, try exporting it from your bank as CSV or Excel.";let credits=tx.filter(t=>t.amount>0),debits=tx.filter(t=>t.amount<0),sum=a=>a.reduce((s,t)=>s+t.amount,0),income=sum(credits),spent=-sum(debits),cats={};debits.forEach(t=>cats[t.category]=(cats[t.category]||0)+Math.abs(t.amount));let top=Object.entries(cats).sort((a,b)=>b[1]-a[1]);if(/summar|overview|statement|total|balance/.test(q))return`Here's your statement summary:\n• Transactions recognized: ${tx.length}\n• Total money in: ${money(income)} (${credits.length} rows)\n• Total money out: ${money(spent)} (${debits.length} rows)\n• Net cash flow: ${money(income-spent)}\n• Date coverage: ${tx.map(t=>t.date).filter(Boolean).sort()[0]||"unknown"} to ${tx.map(t=>t.date).filter(Boolean).sort().slice(-1)[0]||"unknown"}\n\nImportant: net cash flow is not the same as account balance, and the app only counts rows it recognized.`;if(/biggest|category|spend|expense|where.*money/.test(q))return`Largest estimated spending categories:\n${top.slice(0,7).map(([k,v],i)=>`${i+1}. ${k}: ${money(v)}`).join("\n")||"No debit rows found."}\n\nCategories are inferred from descriptions, so check the labels manually.`;if(/recurr|subscription|repeat|monthly/.test(q)){let m={};debits.forEach(t=>{let k=t.description.toLowerCase().replace(/\d+/g,"").replace(/\s+/g," ").trim();m[k]=(m[k]||[]).concat(t)});let matches=Object.entries(m).filter(([k,v])=>v.length>=2).sort((a,b)=>b[1].length-a[1].length).slice(0,8);return matches.length?`Possible recurring/repeated debit descriptions:\n${matches.map(([k,v])=>`• ${k}: ${v.length} rows; total ${money(-v.reduce((s,t)=>s+t.amount,0))}`).join("\n")}\n\nRepeated text does not prove a subscription. Compare dates and amounts manually.`:"No repeated debit descriptions detected in the loaded rows."}if(/duplicate|missing|quality|unusual|anomal|fraud/.test(q)){let dup={};tx.forEach(t=>{let k=`${t.date}|${t.amount}|${t.description.toLowerCase()}`;dup[k]=(dup[k]||0)+1});let n=Object.values(dup).filter(v=>v>1).reduce((s,v)=>s+v-1,0),miss=tx.filter(t=>!t.date||!t.description).length;let high=[...debits].sort((a,b)=>a.amount-b.amount).slice(0,5);return`Data-quality review:\n• Possible exact duplicates: ${n}\n• Rows missing date/description: ${miss}\n• Largest debits: ${high.map(t=>`${t.date||"date unknown"} — ${t.description} — ${money(-t.amount)}`).join("\n")||"No debit rows"}\n\nThese are review flags, not proof of fraud or error. I cannot verify whether the document is authentic.`}if(/largest|biggest.*transaction|high.*transaction/.test(q)){return`Largest transactions by absolute amount:\n${[...tx].sort((a,b)=>Math.abs(b.amount)-Math.abs(a.amount)).slice(0,10).map(t=>`• ${t.date||"—"} | ${t.description} | ${money(t.amount)}`).join("\n")}`}return`I can help with the imported data. Try asking:\n• “Summarize my statement”\n• “What are my biggest spending categories?”\n• “Find recurring payments”\n• “Check for duplicates or missing fields”\n\nRecognized rows: ${tx.length}. For a more open-ended AI response, configure OPENAI_API_KEY on your own server. This local answer is based on simple rules, not a full language model.`}
+
+
+function localAnswer(question) {
+  const q = question.toLowerCase();
+  const tx = state.transactions || [];
+
+  if (!tx.length) {
+    return "Please import a bank statement first. I will then analyze your recognized transactions and explain where your money came from, where it went, and what you can do next.";
+  }
+
+  const money = amount => new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    maximumFractionDigits: 2
+  }).format(amount);
+
+  const credits = tx.filter(t => Number(t.amount) > 0);
+  const debits = tx.filter(t => Number(t.amount) < 0);
+
+  const income = credits.reduce((s, t) => s + Number(t.amount), 0);
+  const spent = debits.reduce((s, t) => s + Math.abs(Number(t.amount)), 0);
+  const net = income - spent;
+
+  const categoryName = t => {
+    const value = String(t.category || "").trim();
+    return value && value.toLowerCase() !== "unknown"
+      ? value
+      : "Uncategorized";
+  };
+
+  const groupTotals = rows => {
+    const groups = {};
+    rows.forEach(t => {
+      const key = categoryName(t);
+      if (!groups[key]) groups[key] = { total: 0, count: 0 };
+      groups[key].total += Math.abs(Number(t.amount));
+      groups[key].count++;
+    });
+    return Object.entries(groups).sort((a, b) => b[1].total - a[1].total);
+  };
+
+  const incomeGroups = groupTotals(credits);
+  const expenseGroups = groupTotals(debits);
+
+  const formatGroups = groups => groups.length
+    ? groups.slice(0, 7).map(([name, data], i) =>
+        `${i + 1}. ${name}: ${money(data.total)} (${data.count} transaction${data.count === 1 ? "" : "s"})`
+      ).join("\n")
+    : "No matching transactions were found.";
+
+  const dates = tx.map(t => String(t.date || "").trim())
+    .filter(Boolean).sort();
+
+  const summary =
+    `STATEMENT SUMMARY\n` +
+    `• Transactions recognized: ${tx.length}\n` +
+    `• Money in: ${money(income)} (${credits.length} transactions)\n` +
+    `• Money out: ${money(spent)} (${debits.length} transactions)\n` +
+    `• Net cash flow: ${money(net)}\n` +
+    `• Date coverage: ${dates.length ? dates[0] + " to " + dates[dates.length - 1] : "Date unavailable"}\n\n` +
+    `Note: Net cash flow is not the same as your bank account balance.`;
+
+  const recommendations = [];
+
+  if (expenseGroups.length) {
+    const [topCategory, topData] = expenseGroups[0];
+    const share = spent > 0 ? Math.round(topData.total / spent * 100) : 0;
+
+    recommendations.push(
+      `Review ${topCategory}: it is your largest recorded spending category at ${money(topData.total)} (${share}% of recorded outflow). Check which purchases are necessary before reducing anything.`
+    );
+
+    const uncategorized = expenseGroups.find(([name]) => name === "Uncategorized");
+    if (uncategorized) {
+      recommendations.push(
+        `Categorize the ${uncategorized[1].count} uncategorized expense transaction(s). Better labels will make your spending analysis more useful.`
+      );
+    }
+
+    const biggest = [...debits].sort((a, b) => Number(a.amount) - Number(b.amount))[0];
+    if (biggest) {
+      recommendations.push(
+        `Review your largest individual debit: ${String(biggest.description || "Description unavailable")} (${money(Math.abs(Number(biggest.amount)))}). Confirm that the amount and purchase are correct.`
+      );
+    }
+
+    const repeated = {};
+    debits.forEach(t => {
+      const key = String(t.description || "").toLowerCase().replace(/\d+/g, "").replace(/\s+/g, " ").trim();
+      if (key) {
+        if (!repeated[key]) repeated[key] = [];
+        repeated[key].push(t);
+      }
+    });
+
+    const repeat = Object.entries(repeated)
+      .filter(([, rows]) => rows.length >= 2)
+      .sort((a, b) => b[1].length - a[1].length)[0];
+
+    if (repeat) {
+      const repeatTotal = repeat[1].reduce((s, t) => s + Math.abs(Number(t.amount)), 0);
+      recommendations.push(
+        `Check the repeated debit description "${repeat[0]}": ${repeat[1].length} transactions totaling ${money(repeatTotal)}. Verify whether these are expected payments; repetition alone does not prove a subscription.`
+      );
+    }
+  }
+
+  if (income > 0 && spent > 0) {
+    recommendations.push(
+      `Set a realistic spending limit for your next statement period and review it weekly. Your recorded outflow is ${Math.round(spent / income * 100)}% of recorded money in; this comparison does not include opening balance or transactions missing from the file.`
+    );
+  }
+
+  if (income > 0) {
+    recommendations.push(
+      `Choose a small, affordable savings goal based on your actual needs. First account for essential expenses and upcoming bills, then decide what amount you can safely set aside.`
+    );
+  }
+
+  if (!recommendations.length) {
+    recommendations.push(
+      "Review the transaction descriptions and categories, confirm that the statement is complete, and set a spending plan based on your actual income and essential expenses."
+    );
+  }
+
+  const rotate = (items, count) => {
+    const start = Math.floor(Date.now() / 1000) % items.length;
+    return Array.from({ length: Math.min(count, items.length) },
+      (_, i) => items[(start + i) % items.length]);
+  };
+
+  if (/where.*(money|paisa)|money.*(came|source|in)|income|deposit|credit|paisa.*(aaya|aaya hai|kahan se)|kahan se.*paisa/.test(q)) {
+    return `WHERE YOUR MONEY CAME FROM\n\n${formatGroups(incomeGroups)}\n\nTotal money in: ${money(income)}\n\nThese figures are grouped using the categories already assigned to your imported transactions.`;
+  }
+
+  if (/where.*(went|go|spent|paisa)|money.*(went|spent|out)|expense|spending|debit|withdrawal|paisa.*(gaya|kharch)|kahan.*(gaya|kharch)/.test(q)) {
+    return `WHERE YOUR MONEY WENT\n\n${formatGroups(expenseGroups)}\n\nTotal money out: ${money(spent)}\n\nThese figures are grouped using the categories already assigned to your imported transactions.`;
+  }
+
+  if (/what.*(should|can).*do|suggest|recommend|improve|save money|next step|ab kya|kya kar.*(sakte|chahiye)|advice|tips/.test(q)) {
+    return `WHAT YOU CAN DO NEXT\n\n${rotate(recommendations, 5).map((r, i) => `${i + 1}. ${r}`).join("\n\n")}\n\nThese suggestions use the currently loaded transactions, not a complete financial assessment.`;
+  }
+
+  if (/summar|overview|statement|total|balance/.test(q)) {
+    return `${summary}\n\nWHERE YOUR MONEY CAME FROM\n${formatGroups(incomeGroups)}\n\nWHERE YOUR MONEY WENT\n${formatGroups(expenseGroups)}\n\nWHAT YOU CAN DO NEXT\n${rotate(recommendations, 5).map((r, i) => `${i + 1}. ${r}`).join("\n\n")}`;
+  }
+
+  if (/recurr|subscription|repeat|monthly/.test(q)) {
+    const repeated = {};
+    debits.forEach(t => {
+      const key = String(t.description || "").toLowerCase().replace(/\d+/g, "").replace(/\s+/g, " ").trim();
+      if (key) (repeated[key] ||= []).push(t);
+    });
+
+    const matches = Object.entries(repeated)
+      .filter(([, rows]) => rows.length >= 2)
+      .sort((a, b) => b[1].length - a[1].length)
+      .slice(0, 8);
+
+    return matches.length
+      ? `POSSIBLE REPEATED PAYMENTS\n\n${matches.map(([name, rows]) =>
+          `• ${name}: ${rows.length} transactions, total ${money(rows.reduce((s, t) => s + Math.abs(Number(t.amount)), 0))}`
+        ).join("\n")}\n\nRepeated descriptions do not prove a subscription. Check the dates and amounts manually.`
+      : "No repeated debit descriptions were detected in the currently loaded transactions.";
+  }
+
+  if (/duplicate|missing|quality|unusual|anomal|fraud/.test(q)) {
+    const seen = {};
+    tx.forEach(t => {
+      const key = `${t.date}|${t.amount}|${String(t.description || "").toLowerCase()}`;
+      seen[key] = (seen[key] || 0) + 1;
+    });
+
+    const duplicates = Object.values(seen).filter(n => n > 1)
+      .reduce((s, n) => s + n - 1, 0);
+    const missing = tx.filter(t => !t.date || !t.description).length;
+    const largest = [...debits].sort((a, b) => Number(a.amount) - Number(b.amount)).slice(0, 5);
+
+    return `DATA QUALITY REVIEW\n\n• Possible exact duplicates: ${duplicates}\n• Rows missing date or description: ${missing}\n• Largest debits:\n${largest.map(t => `• ${t.date || "Date unavailable"} — ${t.description || "Description unavailable"} — ${money(Math.abs(Number(t.amount)) )}`).join("\n") || "No debit rows found."}\n\nThese are review flags, not proof of fraud or error.`;
+  }
+
+  if (/largest|biggest.*transaction|high.*transaction/.test(q)) {
+    return `LARGEST TRANSACTIONS\n\n${[...tx].sort((a, b) => Math.abs(Number(b.amount)) - Math.abs(Number(a.amount))).slice(0, 10).map(t =>
+      `• ${t.date || "—"} | ${t.description || "Description unavailable"} | ${money(Number(t.amount))}`
+    ).join("\n")}`;
+  }
+
+  return `I can analyze your imported transactions locally without adding an AI API.\n\nTry asking:\n• "Summarize my statement"\n• "Where did my money come from?"\n• "Where did my money go?"\n• "What should I do next?"\n• "Find recurring payments"\n• "Check for duplicates"\n\nTransactions loaded: ${tx.length}`;
+}
+
 function addBubble(text,who){const d=document.createElement("div");d.className="bubble "+who;d.textContent=text;$("#chatBox").appendChild(d);$("#chatBox").scrollTop=$("#chatBox").scrollHeight}
 async function sendChat(){let q=$("#chatInput").value.trim();if(!q)return;$("#chatInput").value="";addBubble(q,"user");let answer;try{const res=await fetch("/api/ask",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({question:q,summary:`Files: ${state.files.map(f=>f.name).join(", ")}; ${state.transactions.length} transaction rows.`,transactions:state.transactions.slice(0,150)})});if(res.ok){const d=await res.json();answer=d.answer}else answer=localAnswer(q)}catch(e){answer=localAnswer(q)}addBubble(answer,"assistant")}
 $("#sendChat").onclick=sendChat;$("#chatInput").addEventListener("keydown",e=>{if(e.key==="Enter")sendChat()});$$(".quick").forEach(b=>b.onclick=()=>{$("#chatInput").value=b.dataset.prompt;sendChat()});
